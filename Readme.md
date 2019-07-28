@@ -5,7 +5,7 @@ network ranges and subnetworks. Then I thought it could
 be useful to expand it and share it.
 Be aware, I adapted my program to follow 
 [RFC 1918 standards](https://tools.ietf.org/html/rfc1918). 
-As to say, any provided CIDR (IP/mask_length) be `192.168.[0-255].[0-255]/>=16`, 
+As to say, any provided CIDR (IP/mask_length) must be `192.168.[0-255].[0-255]/>=16`, 
 `172.[16-31].[0-255].[0-255]/>=12` or `10.[0-255].[0-255].[0-255]/>=8`
 
 This project has two classes who allows differents things
@@ -16,7 +16,7 @@ This can also be ran in CLI (command line) or in a file.
 Topics:\
 I. Network Class\
 II. SubnetworkBuilder Class\
-III. Arguments and ways of calling\
+III. Arguments and ways of calling
 
 ## Network Class
 
@@ -36,6 +36,7 @@ test1.determine_network_range(display=True)
 
 # giving mask length
 test2 = Network("172.16.1.0", 13)
+test2.determine_type(display=False)
 ```
 
 ## SubnetworkBuilder Class
@@ -101,7 +102,7 @@ You can execute it from a file, like shown above, or in command line.
 
 Patterns :\
 (`{}` is the class you are calling, you can only call one. `<>` means required and `[]` means optional.
-An optional argument will be display like -SHORT/--long_version)\
+An optional argument will be display like \[-SHORT/--long_version])\
 `py -m SubNetworkConstructor [-E/--english] {network} <ip> <mask> [-R/--raw]`\
 `py -m SubNetworkConstructor [-E/--english {subnet} <ip> <mask> <subnets_sizes>+ ([-A/--advanced] OR [-R/--raw])`
 
