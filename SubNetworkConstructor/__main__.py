@@ -1,5 +1,5 @@
 import argparse
-from .Network import *
+from SubNetworkConstructor.Network import *
 
 
 def main():
