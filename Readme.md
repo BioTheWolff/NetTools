@@ -106,6 +106,11 @@ An optional argument will be display like \[-SHORT/--long_version])\
 `py -m SubNetworkConstructor [-E/--english] {network} <ip> <mask> [-R/--raw]`\
 `py -m SubNetworkConstructor [-E/--english {subnet} <ip> <mask> <subnets_sizes>+ ([-A/--advanced] OR [-R/--raw])`
 
+This instruction is nearly the same as the `{network}` module one. The only difference is you don't need to 
+pass any arguments, as the prober will automatically detect your current IP address and your mask, 
+and use it as a base to provide a range\
+`py -m SubnetworkConstructor [-E/--english] {prober}`
+
 Examples :
 ```
 # python

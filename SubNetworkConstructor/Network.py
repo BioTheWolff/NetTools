@@ -1,3 +1,6 @@
+import netifaces
+
+
 class Network:
     lang = 'fr'
     ip, mask, address_type = None, None, None
@@ -158,7 +161,6 @@ class Network:
                 raise Exception(self.error_dict[self.lang]['ip_number_off_limit'].format(temp[i], i))
 
         try:
-            self.mask = int(self.mask)
             temp = self.mask.split('.')
             if len(temp) != 4:
                 raise Exception(self.error_dict[self.lang]['mask_bytes_length'].format(len(temp)))
@@ -254,11 +256,29 @@ class Network:
         finally:
             self.addresses = 2 ** (32 - self.mask_length) - 2
 
-    def __init__(self, ip, mask, english=None):
+    def __init__(self, ip, mask, english=None, probe=None):
+        if ip is None and mask is None and probe is True:
+            inet = netifaces.AF_INET
+            addrs_raw, addrs_clean = [], []
+            for interface in netifaces.interfaces():
+                addrs_raw.append(netifaces.ifaddresses(interface))
+            for i in range(len(addrs_raw)):
+                if inet in addrs_raw[i].keys():
+                    addrs_clean.append(addrs_raw[i][inet])
+            for i in range(len(addrs_clean)):
+                addr = addrs_clean[i][0]['addr'].split('.')
+                for p in range(3):
+                    allowed = self.rfc_allowed_ranges[p]
+                    if (int(addr[0]) == allowed[0]) and (allowed[1][0] <= int(addr[1]) <= allowed[1][1]):
+                        self.ip = '.'.join(addr)
+                        self.mask = addrs_clean[i][0]['netmask']
+                        break
+        else:
+            self.ip = ip
+            self.mask = mask
+
         if english is True:
             self.lang = 'en'
-        self.ip = ip
-        self.mask = mask
 
         self._verify_provided_types()
         self.calculate_mask()

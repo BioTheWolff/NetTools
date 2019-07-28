@@ -28,6 +28,11 @@ def main():
     group.add_argument("-A", "--advanced", help="Displays more informations about how the subnets are composed, and "
                                                 "also some advices on the masks that can be used", action="store_true")
 
+    # prober parser
+    prober = subparsers.add_parser("probe", help="Module to probe local network and output caracteristics")
+    prober.add_argument("-R", "--raw", help="Returns the network range instad of displaying a smooth recap",
+                        action="store_false")
+
     # lang
     lang = parser.add_mutually_exclusive_group()
     lang.add_argument("-E", "--english", help="Sets the display language to English",
@@ -52,6 +57,10 @@ def main():
     elif args.subparser == "subnet":
         net = SubnetworkBuilder(args.ip, args.mask, args.subnets_sizes, english=lang)
         net.build_subnets(display=args.raw, advanced=args.advanced)
+
+    elif args.subparser == "probe":
+        net = Network(None, None, english=lang, probe=True)
+        net.determine_network_range(display=args.raw)
 
 
 if __name__ == '__main__':
