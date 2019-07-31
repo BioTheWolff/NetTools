@@ -155,11 +155,11 @@ class Network:
         # For more information on RFC 1918 standards, check https://tools.ietf.org/html/rfc1918
         def _check(content):
             ip_test = False
-            for i in range(3):
-                if (int(content[0]) == self.rfc_allowed_ranges[i][0]) and \
-                        (self.rfc_allowed_ranges[i][1][0] <= int(content[1]) <= self.rfc_allowed_ranges[i][1][1]):
+            for I in range(3):
+                if (int(content[0]) == self.rfc_allowed_ranges[I][0]) and \
+                        (self.rfc_allowed_ranges[I][1][0] <= int(content[1]) <= self.rfc_allowed_ranges[I][1][1]):
                     ip_test = True
-                    self.rfc_current_range = i
+                    self.rfc_current_range = I
 
             if ip_test is False:
                 raise Exception(self.error_dict[self.lang]['rfc_ip_wrong_range'].format(ip[0], ip[1]))
@@ -225,16 +225,16 @@ class Network:
             addrs_raw, addrs_clean = [], []
             for interface in netifaces.interfaces():
                 addrs_raw.append(netifaces.ifaddresses(interface))
-            for i in range(len(addrs_raw)):
-                if inet in addrs_raw[i].keys():
-                    addrs_clean.append(addrs_raw[i][inet])
-            for i in range(len(addrs_clean)):
-                addr = addrs_clean[i][0]['addr'].split('.')
+            for elem in addrs_raw:
+                if inet in elem.keys():
+                    addrs_clean.append(elem[inet])
+            for elem in addrs_clean:
+                addr = elem[0]['addr'].split('.')
                 for p in range(3):
                     allowed = self.rfc_allowed_ranges[p]
                     if (int(addr[0]) == allowed[0]) and (allowed[1][0] <= int(addr[1]) <= allowed[1][1]):
                         self.ip = '.'.join(addr)
-                        self.mask = addrs_clean[i][0]['netmask']
+                        self.mask = elem[0]['netmask']
                         break
         else:
             self.ip = ip
@@ -375,12 +375,12 @@ class SubnetworkBuilder(Network):
         graph += "] {} %".format(percentage)
 
         if self.lang == 'en':
-            if len(self.subnets):
+            if len(self.subnets) > 1:
                 t = 's'
             else:
                 t = ''
         else:
-            if len(self.subnets):
+            if len(self.subnets) > 1:
                 t = 'x'
             else:
                 t = ''
