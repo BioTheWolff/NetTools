@@ -87,50 +87,29 @@ class Network:
     }
 
     @staticmethod
-    def _bin_to_dec(binary):
-        forbidden = ['2', '3', '4', '5', '6', '7', '8', '9']
-
-        binary = str(binary)[::-1]
-        binary = list(binary)
-
-        # we check there are only 0's and 1's in the number
-        if any(item in forbidden for item in binary):
-            raise Exception("Binary can only be formed of 0 and 1.")
-
-        result = 0
-
-        for i in range(len(binary)):
-            if binary[i] == '1':
-                result += 2 ** i
-
-        return result
-
-    @staticmethod
-    def __dec_to_bin(decimal):
-        return int(bin(decimal), base=0)
+    def __dec_to_bin(x):
+        return int(bin(x)[:2])
 
     @staticmethod
     def _switch_length(mask_length):
-        nb = 0
-        if mask_length == 1:
-            nb = 128
-        elif mask_length == 2:
-            nb = 192
-        elif mask_length == 3:
-            nb = 224
-        elif mask_length == 4:
-            nb = 240
-        elif mask_length == 5:
-            nb = 248
-        elif mask_length == 6:
-            nb = 252
-        elif mask_length == 7:
-            nb = 254
-        elif mask_length == 8:
-            nb = 255
-        elif mask_length == 0:
-            nb = 0
-        return nb
+        lengths = [0, 128, 192, 224, 240, 248, 252, 254, 255]
+        return lengths[mask_length]
+
+    def mask_length_to_readable(self, mask_length):
+        if mask_length <= 8:
+            result = "{}.0.0.0".format(self._switch_length(mask_length))
+        elif 8 < mask_length <= 16:
+            mask_length -= 8
+            result = "255.{}.0.0".format(self._switch_length(mask_length))
+        elif 16 < mask_length <= 24:
+            mask_length -= 16
+            result = "255.255.{}.0".format(self._switch_length(mask_length))
+        elif 24 < mask_length <= 32:
+            mask_length -= 24
+            result = "255.255.255.{}".format(self._switch_length(mask_length))
+        else:
+            raise Exception(self.error_dict[self.lang]['mask_length_off_bounds'].format(mask_length))
+        return result
 
     def __display_network(self):
         print(self.lang_dict[self.lang]['network'])
@@ -141,12 +120,9 @@ class Network:
         if self.address_type is not None:
             print('')
 
-            if self.address_type == 0:
-                machine_type = self.lang_dict[self.lang]['addr_types']['net']
-            elif self.address_type == 1:
-                machine_type = self.lang_dict[self.lang]['addr_types']['mac']
-            elif self.address_type == 2:
-                machine_type = self.lang_dict[self.lang]['addr_types']['bct']
+            if self.address_type in [0, 1, 2]:
+                types = ['net', 'mac', 'bct']
+                machine_type = self.lang_dict[self.lang]['addr_types'][types[self.address_type]]
             else:
                 raise Exception("Given address type other than expected address types")
 
@@ -162,6 +138,8 @@ class Network:
 
         try:
             temp = self.mask.split('.')
+            if len(temp) == 1:
+                raise AttributeError()
             if len(temp) != 4:
                 raise Exception(self.error_dict[self.lang]['mask_bytes_length'].format(len(temp)))
             for i in range(len(temp)):
@@ -189,36 +167,21 @@ class Network:
         ip = self.ip.split('.')
         mask = self.mask_length
 
-        # We check that starting ip respects RFC standards
+        # We check that ip respects RFC standards
         _check(ip)
 
         # We then check that provided mask corresponds to RFC standards
-        if (int(ip[0]) == 192 and int(ip[1]) == 168) and mask < 16:
-            raise Exception(self.error_dict[self.lang]['rfc_couple'].format(ip[0], ip[1], 16, mask))
-        elif (int(ip[0]) == 172 and int(ip[1]) == 16) and mask < 12:
-            raise Exception(self.error_dict[self.lang]['rfc_couple'].format(ip[0], ip[1], 12, mask))
-        elif (int(ip[0]) == 10 and int(ip[1]) == 0) and mask < 8:
-            raise Exception(self.error_dict[self.lang]['rfc_couple'].format(ip[0], ip[1], 8, mask))
-
-    def mask_length_to_readable(self, mask_length):
-        if mask_length <= 8:
-            result = "{}.0.0.0".format(self._switch_length(mask_length))
-        elif 8 < mask_length <= 16:
-            mask_length -= 8
-            result = "255.{}.0.0".format(self._switch_length(mask_length))
-        elif 16 < mask_length <= 24:
-            mask_length -= 16
-            result = "255.255.{}.0".format(self._switch_length(mask_length))
-        elif 24 < mask_length <= 32:
-            mask_length -= 24
-            result = "255.255.255.{}".format(self._switch_length(mask_length))
-        else:
-            raise Exception(self.error_dict[self.lang]['mask_length_off_bounds'].format(mask_length))
-        return result
+        for i in range(3):
+            allowed = self.rfc_allowed_ranges[i][0]
+            allowed_mask = self.rfc_masks[i]
+            if (int(ip[0]) == allowed) and (mask < allowed_mask):
+                raise Exception(self.error_dict[self.lang]['rfc_couple'].format(ip[0], ip[1], allowed_mask, mask))
 
     def calculate_mask(self):
         try:
             temp = self.mask.split('.')
+            if len(temp) == 1:
+                raise AttributeError()
             length = 0
             for i in range(4):
                 concerned = int(temp[i])
@@ -251,8 +214,8 @@ class Network:
                     raise Exception(self.error_dict[self.lang]['mask_incorrect'])
             self.mask_length = length
         except AttributeError:
-            self.mask_length = self.mask
-            self.mask = self._switch_length(self.mask)
+            self.mask_length = int(self.mask)
+            self.mask = self.mask_length_to_readable(self.mask_length)
         finally:
             self.addresses = 2 ** (32 - self.mask_length) - 2
 
