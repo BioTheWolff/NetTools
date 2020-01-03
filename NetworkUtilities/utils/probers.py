@@ -40,16 +40,16 @@ class NetworkProber(NetworkBasic):
 
         ip = start_ip.split('.')
         addresses = 2 ** machine_bits
-        for i in range(len(ip)):
-            ip[i] = int(ip[i])
+        for e in ip:
+            ip[ip.index(e)] = int(e)
 
         # we take 1 from addresses because the starting ip is already one
-        for i in range(addresses - 1):
+        for _ in range(addresses - 1):
             ip = _check(3, ip)
             liste.append(".".join([str(i) for i in ip]))
 
-        for i in range(len(ip)):
-            ip[i] = str(ip[i])
+        for e in ip:
+            ip[ip.index(e)] = str(e)
 
         result = {'start': start_ip, 'end': '.'.join(ip)}
 
@@ -68,7 +68,7 @@ class NetworkProber(NetworkBasic):
         for e in li[::-1]:
             master.append(e)
 
-        li = self.determine_network_range(start_ip=ip, machine_bits=machine_bits, returning=False, addresses_list=True)
+        _, li = self.determine_network_range(start_ip=ip, machine_bits=machine_bits, addresses_list=True)
         for e in li:
             master.append(e)
 

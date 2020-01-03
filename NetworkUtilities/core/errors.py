@@ -156,21 +156,6 @@ class RFCRulesWrongCoupleException(Exception):
                    f"found mask length {self.g}"
 
 
-class RFCRulesIPsNetworksDifferException(Exception):
-    def __init__(self, lang, first, second):
-        self.lang = lang
-        self.f = first
-        self.s = second
-
-    def __repr__(self):
-        if self.lang == 'raw':
-            return {'first': self.f, 'second': self.s}
-        elif self.lang == 'fr':
-            return f"L'IP de départ ({self.f}) et l'IP ({self.s}) ne sont pas sur le même réseau local"
-        else:
-            return f"Starting IP ({self.f}) and IP ({self.s}) are not on the same local network"
-
-
 # NETWORK LIMIT
 class NetworkLimitException(Exception):
     def __init__(self, lang):

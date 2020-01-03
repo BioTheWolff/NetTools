@@ -111,7 +111,7 @@ class SubnetworkBuilder(NetworkBasic):
 
         for i in range(len(self.subnets_sizes)):
             machine_bits = self.submasks_machine_bits[i]
-            result = self.determine_network_range(returning=True, start_ip=start_ip, machine_bits=machine_bits)
+            result = self.determine_network_range(start_ip=start_ip, machine_bits=machine_bits)
             self.subnets.append(result)
             start_ip = self._find_start_of_next_subnet_range(result['end'])
 

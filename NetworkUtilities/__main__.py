@@ -51,7 +51,7 @@ def main():
     if args.subparser == "network":
         if args.type:
             net = NetworkBasicDisplayer(args.ip, args.mask, lang=lang)
-            net.determine_type(args.type, display=args.raw)
+            net.display_type(args.type, display=args.raw)
         else:
             net = NetworkBasicDisplayer(args.ip, args.mask, lang=lang)
             net.display_range(display=args.raw)

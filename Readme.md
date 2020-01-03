@@ -1,6 +1,7 @@
 # SubNetwork constructor
 
 [![Build Status](https://travis-ci.com/BioTheWolff/NetworkUtilities.svg?branch=master)](https://travis-ci.com/BioTheWolff/NetworkUtilities)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/30e87ae5f5954348b5112171998db645)](https://www.codacy.com/manual/BioTheWolff/NetworkUtilities?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=BioTheWolff/NetworkUtilities&amp;utm_campaign=Badge_Grade)
 
 This project was at first made to help me determining 
 network ranges and subnetworks. Then I thought it could 

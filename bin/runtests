@@ -1,2 +1,3 @@
 #!/bin/bash
-pytest ../NetworkUtilities/tests -v
+cd ..
+python -m unittest discover -s tests

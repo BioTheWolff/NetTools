@@ -1,2 +1,6 @@
 .idea/
 __pycache__/
+Readme_stems/
+NetworkUtilities/version.py
+.coverage
+.pytest_cache

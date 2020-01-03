@@ -1,4 +1,7 @@
-from NetworkUtilities.core.errors import *
+from NetworkUtilities.core.errors import MaskLengthOffBoundsException, MaskByteNumberOffLimitsException, \
+    IPBytesLengthException, MaskBytesLengthException, IPByteNumberOffLimitsException, RFCRulesWrongCoupleException, \
+    RFCRulesIPWrongRangeException, MaskNotProvided, IncorrectMaskException, IPOffNetworkRangeException, \
+    NetworkLimitException
 
 
 class NetworkBasic:
@@ -136,9 +139,9 @@ class NetworkBasic:
         temp = self.ip.split('.')
         if len(temp) != 4:
             raise IPBytesLengthException(self.lang, len(temp))
-        for i in range(len(temp)):
-            if not (0 <= int(temp[i]) <= 255):
-                raise IPByteNumberOffLimitsException(self.lang, temp[i], i)
+        for e in temp:
+            if not (0 <= int(e) <= 255):
+                raise IPByteNumberOffLimitsException(self.lang, e, temp.index(e))
 
         try:
             temp = self.mask.split('.')
@@ -146,9 +149,9 @@ class NetworkBasic:
                 raise AttributeError()
             if len(temp) != 4:
                 raise MaskBytesLengthException(self.lang, len(temp))
-            for i in range(len(temp)):
-                if not (0 <= int(temp[i]) <= 255):
-                    raise MaskByteNumberOffLimitsException(self.lang, temp[i], i)
+            for e in temp:
+                if not (0 <= int(e) <= 255):
+                    raise MaskByteNumberOffLimitsException(self.lang, e, temp.index(e))
         except (AttributeError, ValueError):
             if 0 <= int(self.mask) <= 32:
                 return
@@ -240,7 +243,7 @@ class NetworkBasic:
         self.calculate_mask()
         self._verify_rfc_rules()
 
-    def determine_network_range(self, start_ip=None, machine_bits=None, returning=True, addresses_list=None):
+    def determine_network_range(self, start_ip=None, machine_bits=None, addresses_list=None):
         start = self.ip if start_ip is None else start_ip
         machine_bits = 32 - self.mask_length if machine_bits is None else machine_bits
 
@@ -258,9 +261,7 @@ class NetworkBasic:
 
         liste = []
 
-        if (start_ip is None and returning is None) and (self.mask_length == self.rfc_masks[self.rfc_current_range]) \
-                and addresses_list is None:
-
+        if start_ip is None and (self.mask_length == self.rfc_masks[self.rfc_current_range]) and addresses_list is None:
             if self.rfc_current_range == 0:
                 result = {'start': "192.168.0.0", 'end': "192.168.255.255"}
             elif self.rfc_current_range == 1:
@@ -275,32 +276,28 @@ class NetworkBasic:
                 liste.append(start)
             ip = start.split('.')
             addresses = 2 ** machine_bits
-            for i in range(len(ip)):
-                ip[i] = int(ip[i])
+            for e in ip:
+                ip[ip.index(e)] = int(e)
 
             # we take 1 from addresses because the starting ip is already one
-            for i in range(addresses - 1):
+            for _ in range(addresses - 1):
                 ip = _check(3, ip)
                 if addresses_list:
                     liste.append(".".join([str(i) for i in ip]))
 
-            for i in range(len(ip)):
-                ip[i] = str(ip[i])
+            for e in ip:
+                ip[ip.index(e)] = str(e)
 
             result = {'start': start, 'end': '.'.join(ip)}
 
         self.network_range = result
         if addresses_list:
             del liste[-1]
-
-        if returning and not addresses_list:
-            return result
-        elif returning and addresses_list:
             return result, liste
-        elif addresses_list and not returning:
-            return liste
+        else:
+            return result
 
-    def determine_type(self, machine_ip, display=None):
+    def determine_type(self, machine_ip):
         def _check_end(machine_ip_, idx=3):
             if self.network_range['end'].split('.')[idx] >= machine_ip_.split('.')[idx]:
                 if idx == 0:
@@ -332,6 +329,23 @@ class NetworkBasic:
         else:
             self.address_type = 1
 
+        return self.address_type
+
+
+class NetworkBasicDisplayer(NetworkBasic):
+
+    def display_range(self, display=False):
+        self.determine_network_range()
+
+        if display is True:
+            self._display()
+        else:
+            print(self.network_range)
+
+    def display_type(self, machine_ip, display=False):
+
+        self.determine_type(machine_ip)
+
         if display is True:
             self._display()
         elif display is False:
@@ -347,16 +361,3 @@ class NetworkBasic:
             temp = self.network_range
             temp['address_type'] = machine_type
             print(temp)
-
-        return self.address_type
-
-
-class NetworkBasicDisplayer(NetworkBasic):
-
-    def display_range(self, display=False):
-        self.determine_network_range()
-
-        if display is True:
-            self._display()
-        else:
-            print(self.network_range)
