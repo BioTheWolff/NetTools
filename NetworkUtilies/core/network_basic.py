@@ -1,7 +1,7 @@
-import netifaces
+from NetworkUtilies.core.errors import *
 
 
-class Network:
+class NetworkBasic:
     lang = 'fr'
     ip, mask, address_type = None, None, None
     mask_length, addresses = 0, 0
@@ -22,13 +22,13 @@ class Network:
             },
             'addr_type': "L'adresse {} est une adresse {}",
 
-            'subnets': "{} sous-réseau{}",
+            'utils': "{} sous-réseau{}",
             'sub_addr': "{} - {} ({} adresses)",
             'sub_addr_advanced': "{} - {} ({} adresses disponibles, {} demandées)",
             'net_usage': "Occupation du réseau :"
         },
         'en': {
-            'network': "Network:",
+            'network': "NetworkBasic:",
             'cidr': "CIDR : {}/{}",
             'cidr_adv': "CIDR (Classless Inter Domain Routing) : {}/{}",
             'addr_avail': "{} available addresses",
@@ -40,10 +40,10 @@ class Network:
             },
             'addr_type': "The address {} is a {} address",
 
-            'subnets': "{} sub-network{}",
+            'utils': "{} sub-network{}",
             'sub_addr': "{} - {} ({} addresses)",
             'sub_addr_advanced': "{} - {} ({} available addresses, {} requested)",
-            'net_usage': "Network usage:"
+            'net_usage': "NetworkBasic usage:"
         }
     }
     error_dict = {
@@ -108,13 +108,17 @@ class Network:
             mask_length -= 24
             result = "255.255.255.{}".format(self._switch_length(mask_length))
         else:
-            raise Exception(self.error_dict[self.lang]['mask_length_off_bounds'].format(mask_length))
+            raise MaskLengthOffBoundsException(self.lang, mask_length)
         return result
 
-    def __display_network(self):
+    def _display(self, is_prober=False):
         print(self.lang_dict[self.lang]['network'])
         print(self.lang_dict[self.lang]['cidr'].format(self.ip, self.mask_length))
-        print("{} - {}".format(self.network_range['start'], self.network_range['end']))
+        if is_prober:
+            print("Estimated range from probing : {} - {}".format(self.network_range['start'],
+                                                                  self.network_range['end']))
+        else:
+            print("{} - {}".format(self.network_range['start'], self.network_range['end']))
         print(self.lang_dict[self.lang]['addr_avail'].format(self.addresses))
 
         if self.address_type is not None:
@@ -131,25 +135,25 @@ class Network:
     def _verify_provided_types(self):
         temp = self.ip.split('.')
         if len(temp) != 4:
-            raise Exception(self.error_dict[self.lang]['ip_bytes_length'].format(len(temp)))
+            raise IPBytesLengthException(self.lang, len(temp))
         for i in range(len(temp)):
             if not (0 <= int(temp[i]) <= 255):
-                raise Exception(self.error_dict[self.lang]['ip_number_off_limit'].format(temp[i], i))
+                raise IPByteNumberOffLimitsException(self.lang, temp[i], i)
 
         try:
             temp = self.mask.split('.')
             if len(temp) == 1:
                 raise AttributeError()
             if len(temp) != 4:
-                raise Exception(self.error_dict[self.lang]['mask_bytes_length'].format(len(temp)))
+                raise MaskBytesLengthException(self.lang, len(temp))
             for i in range(len(temp)):
                 if not (0 <= int(temp[i]) <= 255):
-                    raise Exception(self.error_dict[self.lang]['mask_number_off_limit'].format(temp[i], i))
+                    raise MaskByteNumberOffLimitsException(self.lang, temp[i], i)
         except (AttributeError, ValueError):
             if 0 <= int(self.mask) <= 32:
                 return
             else:
-                raise Exception(self.error_dict[self.lang]['mask_length_off_bounds'].format(self.mask))
+                raise MaskLengthOffBoundsException(self.lang, self.mask)
 
     def _verify_rfc_rules(self):
         # For more information on RFC 1918 standards, check https://tools.ietf.org/html/rfc1918
@@ -162,7 +166,7 @@ class Network:
                     self.rfc_current_range = I
 
             if ip_test is False:
-                raise Exception(self.error_dict[self.lang]['rfc_ip_wrong_range'].format(ip[0], ip[1]))
+                raise RFCRulesIPWrongRangeException(self.lang, ip[0], ip[1])
 
         ip = self.ip.split('.')
         mask = self.mask_length
@@ -175,7 +179,7 @@ class Network:
             allowed = self.rfc_allowed_ranges[i][0]
             allowed_mask = self.rfc_masks[i]
             if (int(ip[0]) == allowed) and (mask < allowed_mask):
-                raise Exception(self.error_dict[self.lang]['rfc_couple'].format(ip[0], ip[1], allowed_mask, mask))
+                raise RFCRulesWrongCoupleException(self.lang, ip[0], ip[1], allowed_mask, mask)
 
     def calculate_mask(self):
         try:
@@ -211,7 +215,7 @@ class Network:
                 elif concerned == 0:
                     break
                 else:
-                    raise Exception(self.error_dict[self.lang]['mask_incorrect'])
+                    raise IncorrectMaskException(self.lang)
             self.mask_length = length
         except AttributeError:
             self.mask_length = int(self.mask)
@@ -219,47 +223,31 @@ class Network:
         finally:
             self.addresses = 2 ** (32 - self.mask_length) - 2
 
-    def __init__(self, ip, mask, english=None, probe=None):
-        if ip is None and mask is None and probe is True:
-            inet = netifaces.AF_INET
-            addrs_raw, addrs_clean = [], []
-            for interface in netifaces.interfaces():
-                addrs_raw.append(netifaces.ifaddresses(interface))
-            for elem in addrs_raw:
-                if inet in elem.keys():
-                    addrs_clean.append(elem[inet])
-            for elem in addrs_clean:
-                addr = elem[0]['addr'].split('.')
-                for p in range(3):
-                    allowed = self.rfc_allowed_ranges[p]
-                    if (int(addr[0]) == allowed[0]) and (allowed[1][0] <= int(addr[1]) <= allowed[1][1]):
-                        self.ip = '.'.join(addr)
-                        self.mask = elem[0]['netmask']
-                        break
+    def __init__(self, ip, mask=None, lang=None):
+        if mask is None:
+            try:
+                ip, mask = ip.split('/')
+                self.ip = ip
+                self.mask = mask
+            except ValueError:
+                raise MaskNotProvided(ip)
         else:
             self.ip = ip
             self.mask = mask
-
-        if english is True:
-            self.lang = 'en'
+        self.lang = lang if lang else 'fr'
 
         self._verify_provided_types()
         self.calculate_mask()
         self._verify_rfc_rules()
 
-    def determine_network_range(self, start_ip=None, machine_bits=None, returning=None, display=None):
-        if start_ip is None:
-            c = self.rfc_current_range
-            start = "{}.{}.0.0".format(self.rfc_allowed_ranges[c][0], self.rfc_allowed_ranges[c][1][0])
-        else:
-            start = start_ip
-        if machine_bits is None:
-            machine_bits = 32 - self.mask_length
+    def determine_network_range(self, start_ip=None, machine_bits=None, returning=True, addresses_list=None):
+        start = self.ip if start_ip is None else start_ip
+        machine_bits = 32 - self.mask_length if machine_bits is None else machine_bits
 
         # gives the range of the network depending on the mask
         def _check(idx, content):
             if idx == 0 and content[idx] == 255:
-                raise Exception(self.error_dict[self.lang]['network_limit'])
+                raise NetworkLimitException(self.lang)
 
             if content[idx] == 255:
                 content[idx] = 0
@@ -268,7 +256,10 @@ class Network:
                 content[idx] = content[idx] + 1
                 return content
 
-        if (start_ip is None and returning is None) and (self.mask_length == self.rfc_masks[self.rfc_current_range]):
+        liste = []
+
+        if (start_ip is None and returning is None) and (self.mask_length == self.rfc_masks[self.rfc_current_range]) \
+                and addresses_list is None:
 
             if self.rfc_current_range == 0:
                 result = {'start': "192.168.0.0", 'end': "192.168.255.255"}
@@ -280,6 +271,8 @@ class Network:
                 raise Exception("Something wrong happened when nothing should. Try contacting the author to solve this")
 
         else:
+            if addresses_list:
+                liste.append(start)
             ip = start.split('.')
             addresses = 2 ** machine_bits
             for i in range(len(ip)):
@@ -288,24 +281,26 @@ class Network:
             # we take 1 from addresses because the starting ip is already one
             for i in range(addresses - 1):
                 ip = _check(3, ip)
+                if addresses_list:
+                    liste.append(".".join([str(i) for i in ip]))
 
             for i in range(len(ip)):
                 ip[i] = str(ip[i])
 
             result = {'start': start, 'end': '.'.join(ip)}
 
-        # if returning is None, it means the method wasn't called by the subclass SubNetworkBuilder, no need to return
-        if returning is None:
-            self.network_range = result
-        else:
+        self.network_range = result
+        if addresses_list:
+            del liste[-1]
+
+        if returning and not addresses_list:
             return result
+        elif returning and addresses_list:
+            return result, liste
+        elif addresses_list and not returning:
+            return liste
 
-        if display is True:
-            self.__display_network()
-        elif display is False:
-            print(result)
-
-    def determine_type(self, display=None):
+    def determine_type(self, ip, display=None):
         def _check_end(idx=0):
             if self.network_range['end'].split('.')[idx] <= self.ip.split('.')[idx]:
                 return False
@@ -328,17 +323,17 @@ class Network:
             self.determine_network_range()
 
         if _check_end() or _check_start():
-            raise Exception(self.error_dict[self.lang]['ip_off_network_range'])
+            raise IPOffNetworkRangeException(self.lang)
 
-        if self.network_range['start'] == self.ip:
+        if self.network_range['start'] == ip:
             self.address_type = 0
-        elif self.network_range['end'] == self.ip:
+        elif self.network_range['end'] == ip:
             self.address_type = 2
         else:
             self.address_type = 1
 
         if display is True:
-            self.__display_network()
+            self._display()
         elif display is False:
             if self.address_type == 0:
                 machine_type = self.lang_dict['en']['addr_types']['net']
@@ -354,124 +349,12 @@ class Network:
             print(temp)
 
 
-class SubnetworkBuilder(Network):
-    subnets_sizes, subnets, submasks_machine_bits = [], [], []
+class NetworkBasicDisplayer(NetworkBasic):
 
-    def __display_subnets(self, advanced):
-
-        # graph
-        occupied = 0
-        for i in range(len(self.submasks_machine_bits)):
-            occupied += 2 ** self.submasks_machine_bits[i] - 2
-        percentage = round((occupied / self.addresses) * 100)
-        graph = '['
-        current = 0
-        for i in range(20):
-            if current < percentage:
-                graph += '█'
-            else:
-                graph += '░'
-            current += 5
-        graph += "] {} %".format(percentage)
-
-        if self.lang == 'en':
-            if len(self.subnets) > 1:
-                t = 's'
-            else:
-                t = ''
-        else:
-            if len(self.subnets) > 1:
-                t = 'x'
-            else:
-                t = ''
-
-        print(self.lang_dict[self.lang]['network'])
-        if advanced is True:
-            print(self.lang_dict[self.lang]['cidr_adv'].format(self.ip, self.mask_length))
-        else:
-            print(self.lang_dict[self.lang]['cidr'].format(self.ip, self.mask_length))
-        print("{} - {}".format(self.network_range['start'], self.network_range['end']))
-        if advanced is True:
-            print(self.lang_dict[self.lang]['addr_avail_advanced'].format(occupied, self.addresses))
-        else:
-            print(self.lang_dict[self.lang]['addr_avail'].format(self.addresses))
-        print('')
-        print(self.lang_dict[self.lang]['subnets'].format(len(self.subnets), t))
-
-        for i in range(len(self.subnets)):
-            if advanced is True:
-                print(self.lang_dict[self.lang]['sub_addr_advanced'].format(self.subnets[i]['start'],
-                                                                            self.subnets[i]['end'],
-                                                                            2 ** self.submasks_machine_bits[i] - 2,
-                                                                            self.subnets_sizes[i]))
-            else:
-                print(self.lang_dict[self.lang]['sub_addr'].format(self.subnets[i]['start'], self.subnets[i]['end'],
-                                                                   2 ** self.submasks_machine_bits[i] - 2))
-
-        print('')
-        print(self.lang_dict[self.lang]['net_usage'])
-        print(graph)
-
-    def _find_start_of_next_subnet_range(self, end):
-        def _check(idx, content):
-            if idx == 0 and content[idx] == '255':
-                raise Exception(self.error_dict[self.lang]['network_limit'])
-
-            if content[idx] == '255':
-                content[idx] = '0'
-                return _check(idx - 1, content)
-            else:
-                content[idx] = str(int(content[idx]) + 1)
-                return '.'.join(content)
-
-        data = end.split('.')
-        return _check(3, data)
-
-    def __determine_required_submasks_sizes(self):
-
-        submasks = []
-
-        for i in range(len(self.subnets_sizes)):
-            power = 1
-            while 2 ** power - 2 < self.subnets_sizes[i]:
-                power = power + 1
-            submasks.append(power)
-
-        self.submasks_machine_bits = submasks
-
-    def __init__(self, starting_ip, mask, subnets_sizes, english=None):
-        super().__init__(starting_ip, mask, english=english)
-        self.subnets_sizes = sorted(subnets_sizes, reverse=True)
-
-        # first, let's check if the provided mask can handle all the addresses requested
+    def display_range(self, display=False):
         self.determine_network_range()
-        self.__determine_required_submasks_sizes()
-
-        total = 0
-
-        for i in range(len(self.submasks_machine_bits)):
-            total += 2**self.submasks_machine_bits[i]
-
-        if self.addresses < total:
-            power = 1
-            while total > 2**power:
-                power += 1
-            raise Exception(self.error_dict[self.lang]['mask_too_small'].format(self.mask_length, 32-power))
-
-    def build_subnets(self, returning=None, display=None, advanced=None):
-
-        start_ip = self.network_range['start']
-
-        for i in range(len(self.subnets_sizes)):
-            machine_bits = self.submasks_machine_bits[i]
-            result = self.determine_network_range(returning=True, start_ip=start_ip, machine_bits=machine_bits)
-            self.subnets.append(result)
-            start_ip = self._find_start_of_next_subnet_range(result['end'])
 
         if display is True:
-            self.__display_subnets(advanced)
-        elif display is False:
-            print(self.subnets)
-
-        if returning is True:
-            return self.subnets
+            self._display()
+        else:
+            print(self.network_range)

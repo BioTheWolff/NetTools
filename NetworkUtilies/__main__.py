@@ -1,5 +1,7 @@
 import argparse
-from SubNetworkConstructor.Network import *
+from NetworkUtilies.core.network_basic import NetworkBasicDisplayer
+from NetworkUtilies.utils.probers import NetworkProbingDisplayer
+from NetworkUtilies.utils.subnetworkbuilder import SubnetworkBuilder
 
 
 def main():
@@ -12,7 +14,7 @@ def main():
     network_parser.add_argument("mask", help="The network mask. You can provide either the mask or its length")
 
     network_parser.add_argument("-T", "--type", help="Display the type of the provided IP", action="store_true")
-    network_parser.add_argument("-R", "--raw", help="Returns the array of subnets instad of displaying a smooth recap",
+    network_parser.add_argument("-R", "--raw", help="Returns the array of utils instad of displaying a smooth recap",
                                 action="store_false")
 
     # subnetbuilder parser
@@ -23,9 +25,9 @@ def main():
                                                      "in each subnetwork", nargs='+', type=int)
 
     group = subnetbuilder.add_mutually_exclusive_group()
-    group.add_argument("-R", "--raw", help="Returns the array of subnets instad of displaying a smooth recap",
+    group.add_argument("-R", "--raw", help="Returns the array of utils instad of displaying a smooth recap",
                        action="store_false")
-    group.add_argument("-A", "--advanced", help="Displays more informations about how the subnets are composed, and "
+    group.add_argument("-A", "--advanced", help="Displays more informations about how the utils are composed, and "
                                                 "also some advices on the masks that can be used", action="store_true")
 
     # prober parser
@@ -48,19 +50,19 @@ def main():
 
     if args.subparser == "network":
         if args.type is True:
-            net = Network(args.ip, args.mask, english=lang)
+            net = NetworkBasicDisplayer(args.ip, args.mask, english=lang)
             net.determine_type(display=args.raw)
         else:
-            net = Network(args.ip, args.mask, english=lang)
-            net.determine_network_range(display=args.raw)
+            net = NetworkBasicDisplayer(args.ip, args.mask, english=lang)
+            net.display_range(display=args.raw)
 
     elif args.subparser == "subnet":
-        net = SubnetworkBuilder(args.ip, args.mask, args.subnets_sizes, english=lang)
+        net = SubnetworkBuilder(args.ip, args.mask, args.subnets_sizes, lang=lang)
         net.build_subnets(display=args.raw, advanced=args.advanced)
 
     elif args.subparser == "probe":
-        net = Network(None, None, english=lang, probe=True)
-        net.determine_network_range(display=args.raw)
+        net = NetworkProbingDisplayer(english=lang)
+        net.display_range(display=args.raw)
 
 
 if __name__ == '__main__':
