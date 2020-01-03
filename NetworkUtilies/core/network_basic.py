@@ -300,34 +300,34 @@ class NetworkBasic:
         elif addresses_list and not returning:
             return liste
 
-    def determine_type(self, ip, display=None):
-        def _check_end(idx=0):
-            if self.network_range['end'].split('.')[idx] <= self.ip.split('.')[idx]:
-                return False
-            else:
-                if idx == 3:
-                    return True
+    def determine_type(self, machine_ip, display=None):
+        def _check_end(machine_ip_, idx=3):
+            if self.network_range['end'].split('.')[idx] >= machine_ip_.split('.')[idx]:
+                if idx == 0:
+                    return None
                 else:
-                    return _check_end(idx + 1)
+                    return _check_end(machine_ip_, idx - 1)
+            else:
+                return True
 
-        def _check_start(idx=0):
-            if self.network_range['start'].split('.')[idx] >= self.ip.split('.')[idx]:
-                return False
-            else:
-                if idx == 3:
-                    return True
+        def _check_start(machine_ip_, idx=3):
+            if self.network_range['start'].split('.')[idx] <= machine_ip_.split('.')[idx]:
+                if idx == 0:
+                    return None
                 else:
-                    return _check_start(idx + 1)
+                    return _check_start(machine_ip_, idx - 1)
+            else:
+                return True
 
         if self.network_range == {}:
             self.determine_network_range()
 
-        if _check_end() or _check_start():
+        if _check_end(machine_ip) or _check_start(machine_ip):
             raise IPOffNetworkRangeException(self.lang)
 
-        if self.network_range['start'] == ip:
+        if self.network_range['start'] == machine_ip:
             self.address_type = 0
-        elif self.network_range['end'] == ip:
+        elif self.network_range['end'] == machine_ip:
             self.address_type = 2
         else:
             self.address_type = 1
@@ -347,6 +347,8 @@ class NetworkBasic:
             temp = self.network_range
             temp['address_type'] = machine_type
             print(temp)
+
+        return self.address_type
 
 
 class NetworkBasicDisplayer(NetworkBasic):

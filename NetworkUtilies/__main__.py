@@ -13,7 +13,7 @@ def main():
     network_parser.add_argument("ip", help="One IP in the network")
     network_parser.add_argument("mask", help="The network mask. You can provide either the mask or its length")
 
-    network_parser.add_argument("-T", "--type", help="Display the type of the provided IP", action="store_true")
+    network_parser.add_argument("-T", "--type", help="Display the type of the provided IP", type=str)
     network_parser.add_argument("-R", "--raw", help="Returns the array of utils instad of displaying a smooth recap",
                                 action="store_false")
 
@@ -44,16 +44,16 @@ def main():
     args = parser.parse_args()
 
     if args.english is True:
-        lang = True
+        lang = 'english'
     else:
-        lang = False
+        lang = None
 
     if args.subparser == "network":
-        if args.type is True:
-            net = NetworkBasicDisplayer(args.ip, args.mask, english=lang)
-            net.determine_type(display=args.raw)
+        if args.type:
+            net = NetworkBasicDisplayer(args.ip, args.mask, lang=lang)
+            net.determine_type(args.type, display=args.raw)
         else:
-            net = NetworkBasicDisplayer(args.ip, args.mask, english=lang)
+            net = NetworkBasicDisplayer(args.ip, args.mask, lang=lang)
             net.display_range(display=args.raw)
 
     elif args.subparser == "subnet":
@@ -61,7 +61,7 @@ def main():
         net.build_subnets(display=args.raw, advanced=args.advanced)
 
     elif args.subparser == "probe":
-        net = NetworkProbingDisplayer(english=lang)
+        net = NetworkProbingDisplayer(lang=lang)
         net.display_range(display=args.raw)
 
 
