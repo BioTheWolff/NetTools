@@ -1,7 +1,7 @@
 import argparse
-from NetworkUtilies.core.network_basic import NetworkBasicDisplayer
-from NetworkUtilies.utils.probers import NetworkProbingDisplayer
-from NetworkUtilies.utils.subnetworkbuilder import SubnetworkBuilder
+from NetworkUtilities.core.network_basic import NetworkBasicDisplayer
+from NetworkUtilities.utils.probers import NetworkProbingDisplayer
+from NetworkUtilities.utils.subnetworkbuilder import SubnetworkBuilder
 
 
 def main():

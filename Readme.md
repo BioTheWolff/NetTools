@@ -1,5 +1,7 @@
 # SubNetwork constructor
 
+[![Build Status](https://travis-ci.com/BioTheWolff/NetworkUtilities.svg?branch=master)](https://travis-ci.com/BioTheWolff/NetworkUtilities)
+
 This project was at first made to help me determining 
 network ranges and subnetworks. Then I thought it could 
 be useful to expand it and share it.

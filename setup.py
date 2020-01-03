@@ -77,7 +77,7 @@ def setup_package():
         license='MIT',
         packages=[
             'NetworkUtilities',
-            'Networkutilities.core',
+            'NetworkUtilities.core',
             'NetworkUtilities.utils',
             'NetworkUtilities.tests'
         ],

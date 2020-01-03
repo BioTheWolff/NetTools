@@ -1,4 +1,4 @@
-import NetworkUtilies.utils.subnetworkbuilder as sb
+import NetworkUtilities.utils.subnetworkbuilder as sb
 
 
 class SubnetBuilderTestClass:

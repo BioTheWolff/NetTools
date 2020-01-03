@@ -1,4 +1,4 @@
-from NetworkUtilies.core.network_basic import NetworkBasic
+from NetworkUtilities.core.network_basic import NetworkBasic
 import netifaces
 
 

@@ -1,5 +1,5 @@
-import NetworkUtilies.core.network_basic as nb
-import NetworkUtilies.core.errors as er
+import NetworkUtilities.core.network_basic as nb
+import NetworkUtilities.core.errors as er
 
 
 class TestBasicClass:

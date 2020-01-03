@@ -1,4 +1,4 @@
-from NetworkUtilies.core.errors import *
+from NetworkUtilities.core.errors import *
 
 
 class NetworkBasic:

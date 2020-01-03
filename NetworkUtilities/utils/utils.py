@@ -1,4 +1,4 @@
-from NetworkUtilies.core.errors import NetworkLimitError, IPOffNetworkRangeException
+from NetworkUtilities.core.errors import NetworkLimitError, IPOffNetworkRangeException
 
 
 class Utils:
