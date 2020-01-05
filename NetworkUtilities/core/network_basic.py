@@ -10,6 +10,7 @@ class NetworkBasic:
     mask_length, addresses = 0, 0
     rfc_current_range, rfc_masks = None, [16, 12, 8]
     rfc_allowed_ranges = [[192, [168, 168]], [172, [16, 31]], [10, [0, 255]]]
+    mask_allowed_bytes = [0, 128, 192, 224, 240, 248, 252, 254, 255]
     network_range = {}
     lang_dict = {
         'fr': {
@@ -93,10 +94,11 @@ class NetworkBasic:
     def __dec_to_bin(x):
         return int(bin(x)[:2])
 
-    @staticmethod
-    def _switch_length(mask_length):
-        lengths = [0, 128, 192, 224, 240, 248, 252, 254, 255]
-        return lengths[mask_length]
+    def _switch_length(self, mask_length, index=False):
+        if index:
+            return self.mask_allowed_bytes.index(mask_length)
+        else:
+            return self.mask_allowed_bytes[mask_length]
 
     def mask_length_to_readable(self, mask_length):
         if mask_length <= 8:
@@ -185,44 +187,52 @@ class NetworkBasic:
                 raise RFCRulesWrongCoupleException(self.lang, ip[0], ip[1], allowed_mask, mask)
 
     def calculate_mask(self):
+        """
+        Calculates the mask from the instance var self.mask
+
+        If the mask is a literal mask (i.e. '255.255.255.0'), the try case is concerned.
+        If instead, the user gave the mask length, we make sure to raise an AttributeError to switch to the
+        except case to do proper testing.
+
+        :raises:
+            IncorrectMaskException: if the mask is wrongly formed (byte != 0 after byte < 255) or if the mask contains a
+                byte that cannot be used in a mask.
+        """
+
         try:
+            # The mask is given by its literal
             temp = self.mask.split('.')
             if len(temp) == 1:
+                # If the mask is given by its length
+                # Use AttributeError raise to switch to the except case
                 raise AttributeError()
+
             length = 0
-            for i in range(4):
-                concerned = int(temp[i])
-                if concerned == 255:
-                    length += 8
-                elif concerned == 254:
-                    length += 7
-                    break
-                elif concerned == 252:
-                    length += 6
-                    break
-                elif concerned == 248:
-                    length += 5
-                    break
-                elif concerned == 240:
-                    length += 4
-                    break
-                elif concerned == 224:
-                    length += 3
-                    break
-                elif concerned == 192:
-                    length += 2
-                    break
-                elif concerned == 128:
-                    length += 1
-                    break
-                elif concerned == 0:
-                    break
+
+            for byte in range(4):
+                concerned = int(temp[byte])
+                print(byte, concerned)
+                # We check that the byte is in the awaited bytes list
+                if concerned in self.mask_allowed_bytes:
+                    # If mask contains a 0, we check that each next byte
+                    # contains only a 0, else we raise an IncorrectMaskException
+                    if concerned < 255:
+                        for i in range(1, 4 - byte):
+                            if temp[byte + i] != 0:
+                                raise IncorrectMaskException(self.lang)
+
+                    length += self._switch_length(concerned, index=True)
                 else:
                     raise IncorrectMaskException(self.lang)
+
+            # Stock the length
             self.mask_length = length
+
         except AttributeError:
+            # The mask is given by its length
             self.mask_length = int(self.mask)
             self.mask = self.mask_length_to_readable(self.mask_length)
+
         finally:
             self.addresses = 2 ** (32 - self.mask_length) - 2
 

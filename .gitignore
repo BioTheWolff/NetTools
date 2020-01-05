@@ -1,6 +1,10 @@
+# Idea & Python
 .idea/
 __pycache__/
-Readme_stems/
+
+# Version file
 NetworkUtilities/version.py
+
+# Coverage module
 .coverage
-.pytest_cache
+htmlcov/
