@@ -5,7 +5,7 @@ from NetworkUtilities.core.errors import MaskLengthOffBoundsException, MaskByteN
 
 
 class NetworkBasic:
-    lang = 'fr'
+    lang = 'en'
     ip, mask, address_type = None, None, None
     mask_length, addresses = 0, 0
     rfc_current_range, rfc_masks = None, [16, 12, 8]
@@ -13,87 +13,46 @@ class NetworkBasic:
     mask_allowed_bytes = [0, 128, 192, 224, 240, 248, 252, 254, 255]
     network_range = {}
     lang_dict = {
-        'fr': {
-            'network': "Réseau :",
-            'cidr': "CIDR : {}/{}",
-            'cidr_adv': "CIDR (Classless Inter Domain Routing) : {}/{}",
-            'addr_avail': "{} adresses disponibles",
-            'addr_avail_advanced': "{} adresses occupées sur {} adresses disponibles",
-            'addr_types': {
-                'net': "réseau",
-                'mac': "machine",
-                'bct': "broadcast"
-            },
-            'addr_type': "L'adresse {} est une adresse {}",
-
-            'utils': "{} sous-réseau{}",
-            'sub_addr': "{} - {} ({} adresses)",
-            'sub_addr_advanced': "{} - {} ({} adresses disponibles, {} demandées)",
-            'net_usage': "Occupation du réseau :"
+        'network': "Network:",
+        'cidr': "CIDR : {}/{}",
+        'cidr_adv': "CIDR (Classless Inter Domain Routing) : {}/{}",
+        'addr_avail': "{} available addresses",
+        'addr_avail_advanced': "{} occupied addresses out of {} available addresses",
+        'addr_types': {
+            'net': "network",
+            'mac': "computer",
+            'bct': "broadcast"
         },
-        'en': {
-            'network': "NetworkBasic:",
-            'cidr': "CIDR : {}/{}",
-            'cidr_adv': "CIDR (Classless Inter Domain Routing) : {}/{}",
-            'addr_avail': "{} available addresses",
-            'addr_avail_advanced': "{} occupied addresses out of {} available addresses",
-            'addr_types': {
-                'net': "network",
-                'mac': "computer",
-                'bct': "broadcast"
-            },
-            'addr_type': "The address {} is a {} address",
+        'addr_type': "The address {} is a {} address",
 
-            'utils': "{} sub-network{}",
-            'sub_addr': "{} - {} ({} addresses)",
-            'sub_addr_advanced': "{} - {} ({} available addresses, {} requested)",
-            'net_usage': "NetworkBasic usage:"
-        }
+        'utils': "{} sub-network{}",
+        'sub_addr': "{} - {} ({} addresses)",
+        'sub_addr_advanced': "{} - {} ({} available addresses, {} requested)",
+        'net_usage': "NetworkBasic usage:"
     }
     error_dict = {
-        'fr': {
-            'ip_bytes_length': "L'IP doit faire 4 octets, trouvé {} octect(s)",
-            'ip_number_off_limits': "Les octects de l'IP doivent être entre 0 et 255. Trouvé {} à l'octect {}",
-            'ip_off_network_range': "L'adresse IP n'est pas dans la plage réseau.",
+        'ip_bytes_length': "IP must be 4 bytes long, found {} byte(s)",
+        'ip_number_off_limits': "IP bytes must be between 0 and 255. Found {} at byte {}",
+        'ip_off_network_range': "IP address not in network range.",
 
-            'mask_bytes_length': "Le masque doit faire 4 octets, trouvé {} octect(s)",
-            'mask_number_off_limits': "Les octects du masque doivent être entre 0 et 255. Trouvé {} à l'octect {}",
-            'mask_length_off_bounds': "Longueur du masque ({}) hors limites [0-32]",
-            'mask_incorrect': "Masque incorrect. Valeurs acceptées: [0,128,192,224,240,248,242,254,255]",
-            'mask_too_small': "La longueur du masque donnée ({}) ne peut contenir toutes les adresses des "
-                              "sous-réseaux. Longueur conseillée : {}",
+        'mask_bytes_length': "Mask must be 4 bytes long, found {} bytes",
+        'mask_number_off_limits': "Mask bytes must be between 0 and 255. Found {} at byte {}",
+        'mask_length_off_bounds': "Provided mask length ({}) out of bounds [0-32]",
+        'mask_incorrect': "Incorrect mask. Allowed values: [0,128,192,224,240,248,242,254,255]",
+        'mask_too_small': "Given mask length ({}) cannot handle all the addresses of the subnetworks. "
+                          "Advised length : {}",
 
-            'rfc_ip_wrong_range': "L'IP doit être sous la forme 192.168.x.x , 172.16.x.x ou 10.0.x.x; "
-                                  "trouvé {}.{}.x.x",
-            'rfc_couple': "Selon les standards RFC, le couple doit être {}.{}.x.x/>={}, trouvé masque de longueur {}",
-            'rfc_ips_diff_network': "L'IP de départ ({}) et l'IP ({}) ne sont pas sur le même réseau local",
+        'rfc_ip_wrong_range': "IP must be either 192.168.x.x , 172.16.x.x or 10.0.x.x; found {}.{}.x.x",
+        'rfc_couple': "According to RFC standards, given couple must be {}.{}.x.x/>={}, found mask length {}",
+        'rfc_ips_diff_network': "Starting IP ({}) and IP ({}) are not on the same local network",
 
-            'network_limit': "Limite 255.255.255.255 atteinte en essayant de définir une plage (de sous-)réseau."
-        },
-        'en': {
-            'ip_bytes_length': "IP must be 4 bytes long, found {} byte(s)",
-            'ip_number_off_limits': "IP bytes must be between 0 and 255. Found {} at byte {}",
-            'ip_off_network_range': "IP address not in network range.",
-
-            'mask_bytes_length': "Mask must be 4 bytes long, found {} bytes",
-            'mask_number_off_limits': "Mask bytes must be between 0 and 255. Found {} at byte {}",
-            'mask_length_off_bounds': "Provided mask length ({}) out of bounds [0-32]",
-            'mask_incorrect': "Incorrect mask. Allowed values: [0,128,192,224,240,248,242,254,255]",
-            'mask_too_small': "Given mask length ({}) cannot handle all the addresses of the subnetworks. "
-                              "Advised length : {}",
-
-            'rfc_ip_wrong_range': "IP must be either 192.168.x.x , 172.16.x.x or 10.0.x.x; found {}.{}.x.x",
-            'rfc_couple': "According to RFC standards, given couple must be {}.{}.x.x/>={}, found mask length {}",
-            'rfc_ips_diff_network': "Starting IP ({}) and IP ({}) are not on the same local network",
-
-            'network_limit': "Limit 255.255.255.255 reached while trying to determine (sub)network range."
-        }
+        'network_limit': "Limit 255.255.255.255 reached while trying to determine (sub)network range."
     }
 
     #
     # DUNDERS
     #
-    def __init__(self, ip, mask=None, lang=None):
+    def __init__(self, ip, mask=None):
         """
         The mask is an optional parameter in case the CIDR is passed into the ip parameter.
         The CIDR, as in its definition, can only be expressed with the mask length:
@@ -107,6 +66,8 @@ class NetworkBasic:
         :param lang: lang if lang is defined else french. Current supported: en, fr
         :raises:
             MaskNotProvided: If the mask parameter is None and the ip parameter is not a valid CIDR
+
+        TODO: delete languages option
         """
 
         if mask is None:
@@ -119,7 +80,6 @@ class NetworkBasic:
         else:
             self.ip = ip
             self.mask = mask
-        self.lang = lang if lang else 'fr'
 
         self._verify_provided_types()
         self.calculate_mask()
@@ -188,7 +148,6 @@ class NetworkBasic:
 
             for byte in range(4):
                 concerned = int(temp[byte])
-                print(byte, concerned)
                 # We check that the byte is in the awaited bytes list
                 if concerned in self.mask_allowed_bytes:
                     # If mask contains a 0, we check that each next byte
@@ -285,25 +244,25 @@ class NetworkBasic:
     # Template for child classes
     #
     def _display(self, is_prober=False):
-        print(self.lang_dict[self.lang]['network'])
-        print(self.lang_dict[self.lang]['cidr'].format(self.ip, self.mask_length))
+        print(self.lang_dict['network'])
+        print(self.lang_dict['cidr'].format(self.ip, self.mask_length))
         if is_prober:
             print("Estimated range from probing : {} - {}".format(self.network_range['start'],
                                                                   self.network_range['end']))
         else:
             print("{} - {}".format(self.network_range['start'], self.network_range['end']))
-        print(self.lang_dict[self.lang]['addr_avail'].format(self.addresses))
+        print(self.lang_dict['addr_avail'].format(self.addresses))
 
         if self.address_type is not None:
             print('')
 
             if self.address_type in [0, 1, 2]:
                 types = ['net', 'mac', 'bct']
-                machine_type = self.lang_dict[self.lang]['addr_types'][types[self.address_type]]
+                machine_type = self.lang_dict['addr_types'][types[self.address_type]]
             else:
                 raise Exception("Given address type other than expected address types")
 
-            print(self.lang_dict[self.lang]['addr_type'].format(self.ip, machine_type))
+            print(self.lang_dict['addr_type'].format(self.ip, machine_type))
 
     #
     # Main functions
@@ -435,11 +394,11 @@ class NetworkBasicDisplayer(NetworkBasic):
             self._display()
         elif display is False:
             if self.address_type == 0:
-                machine_type = self.lang_dict['en']['addr_types']['net']
+                machine_type = self.lang_dict['addr_types']['net']
             elif self.address_type == 1:
-                machine_type = self.lang_dict['en']['addr_types']['mac']
+                machine_type = self.lang_dict['addr_types']['mac']
             elif self.address_type == 2:
-                machine_type = self.lang_dict['en']['addr_types']['bct']
+                machine_type = self.lang_dict['addr_types']['bct']
             else:
                 raise Exception("Given address type other than expected address types")
 
