@@ -31,15 +31,18 @@ you can then call either `instance.determine_network_range()`, which will give
 the network range, or `instance.determine_type()`, which will give the network 
 range followed by the type of the provided IP (network, computer or broadcast address)
 
-Examples :
-```
-# giving mask and calling determine_network_range()
-test1 = Network("192.168.1.0", "255.255.240.0", english=True)
-test1.determine_network_range(display=True)
+Example :
+```ignorelang
+> test1 = NetworkBasic("192.168.1.0", "255.255.240.0")
+> net_range = test1.determine_network_range()
+> print(f'{net_range}\n')
+{'start': '192.168.1.0', 'end': '192.168.16.255'}
 
-# giving mask length
-test2 = Network("172.16.1.0", 13)
-test2.determine_type(display=False)
+> test2 = NetworkBasic("172.16.1.0", 13)
+> machine_type = test2.determine_type("172.16.1.155")
+> # 0 is network, 1 is computer and 2 is broadcast
+> print(machine_type)
+1
 ```
 
 ## SubnetworkBuilder Class
@@ -52,13 +55,13 @@ of the network like displayed above.
 
 Example:
 We want 3 subnetworks, one of 1500 addresses, one of 5000 and one of 3860
-```
+```ignorelang
 test = SubnetworkBuilder("192.168.1.0", 18, [1500, 5000, 3860])
 test.build_subnets(display=True)
 ```
 
 This will output
-```
+```ignorelang
 Network:
 CIDR : 192.168.1.0/18
 192.168.0.0 - 192.168.63.255
@@ -83,7 +86,7 @@ parameter `english=True` to get any "smooth display" in English. Else,
 you will get it in French by default.
 
 When calling a function referenced below, you can pass `display=True` to get a display in your language
- ```
+ ```ignorelang
 Network:
 CIDR : 192.168.1.0/16
 192.168.0.0 - 192.168.255.255
@@ -93,7 +96,7 @@ The address 192.168.1.0 is a computer address
 ```
  
  or `display=False` to get a raw output (always in english)
- ```
+ ```ignorelang
 {'start': '192.168.0.0', 'end': '192.168.255.255', 'address_type': 'computer'}
 ```
 
@@ -115,7 +118,7 @@ and use it as a base to provide a range\
 `py -m SubnetworkConstructor [-E/--english] {prober}`
 
 Examples :
-```
+```ignorelang
 # python
 test = SubnetworkBuilder("192.168.1.0", 18, [1500, 5000, 3860])
 test.build_subnets(display=True, advanced=True)
@@ -124,7 +127,7 @@ test.build_subnets(display=True, advanced=True)
 py -m SubNetworkConstructor subnet 192.168.1.0 18 1500 5000 3860 --advanced
 ```
 
-```
+```ignorelang
 # python
 test1 = Network("192.168.1.0", "255.255.240.0", english=True)
 test1.determine_network_range(display=False)
