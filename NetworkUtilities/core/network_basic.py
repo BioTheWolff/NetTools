@@ -2,6 +2,7 @@ from NetworkUtilities.core.errors import MaskLengthOffBoundsException, MaskByteN
     IPBytesLengthException, MaskBytesLengthException, IPByteNumberOffLimitsException, RFCRulesWrongCoupleException, \
     RFCRulesIPWrongRangeException, MaskNotProvided, IncorrectMaskException, IPOffNetworkRangeException, \
     NetworkLimitException
+from NetworkUtilities.core.utils import Utils
 
 
 class NetworkBasic:
@@ -63,7 +64,6 @@ class NetworkBasic:
 
         :param ip: The ip that starts the range
         :param mask: The mask literal or length
-        :param lang: lang if lang is defined else french. Current supported: en, fr
         :raises:
             MaskNotProvided: If the mask parameter is None and the ip parameter is not a valid CIDR
 
@@ -243,7 +243,7 @@ class NetworkBasic:
     #
     # Template for child classes
     #
-    def _display(self, is_prober=False):
+    def _display(self, machine_ip=None, is_prober=False):
         print(self.lang_dict['network'])
         print(self.lang_dict['cidr'].format(self.ip, self.mask_length))
         if is_prober:
@@ -253,7 +253,7 @@ class NetworkBasic:
             print("{} - {}".format(self.network_range['start'], self.network_range['end']))
         print(self.lang_dict['addr_avail'].format(self.addresses))
 
-        if self.address_type is not None:
+        if self.address_type is not None and machine_ip:
             print('')
 
             if self.address_type in [0, 1, 2]:
@@ -262,7 +262,7 @@ class NetworkBasic:
             else:
                 raise Exception("Given address type other than expected address types")
 
-            print(self.lang_dict['addr_type'].format(self.ip, machine_type))
+            print(self.lang_dict['addr_type'].format(machine_ip, machine_type))
 
     #
     # Main functions
@@ -342,28 +342,10 @@ class NetworkBasic:
             IPOffNetworkRangeException: If the given IP is not in the network range
         """
 
-        def _check_end(machine_ip_, idx=3):
-            if self.network_range['end'].split('.')[idx] >= machine_ip_.split('.')[idx]:
-                if idx == 0:
-                    return None
-                else:
-                    return _check_end(machine_ip_, idx - 1)
-            else:
-                return True
-
-        def _check_start(machine_ip_, idx=3):
-            if self.network_range['start'].split('.')[idx] <= machine_ip_.split('.')[idx]:
-                if idx == 0:
-                    return None
-                else:
-                    return _check_start(machine_ip_, idx - 1)
-            else:
-                return True
-
-        if self.network_range == {}:
+        if not self.network_range:
             self.determine_network_range()
 
-        if _check_end(machine_ip) or _check_start(machine_ip):
+        if not Utils.ip_in_range(self.network_range, machine_ip):
             raise IPOffNetworkRangeException(self.lang)
 
         if self.network_range['start'] == machine_ip:
@@ -387,11 +369,10 @@ class NetworkBasicDisplayer(NetworkBasic):
             print(self.network_range)
 
     def display_type(self, machine_ip, display=False):
-
         self.determine_type(machine_ip)
 
         if display is True:
-            self._display()
+            self._display(machine_ip=machine_ip)
         elif display is False:
             if self.address_type == 0:
                 machine_type = self.lang_dict['addr_types']['net']

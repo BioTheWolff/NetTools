@@ -21,48 +21,42 @@ class SubnetworkBuilder(NetworkBasic):
             current += 5
         graph += "] {} %".format(percentage)
 
-        if self.lang == 'en':
-            if len(self.subnets) > 1:
-                t = 's'
-            else:
-                t = ''
+        if len(self.subnets) > 1:
+            t = 's'
         else:
-            if len(self.subnets) > 1:
-                t = 'x'
-            else:
-                t = ''
+            t = ''
 
-        print(self.lang_dict[self.lang]['network'])
+        print(self.lang_dict['network'])
         if advanced is True:
-            print(self.lang_dict[self.lang]['cidr_adv'].format(self.ip, self.mask_length))
+            print(self.lang_dict['cidr_adv'].format(self.ip, self.mask_length))
         else:
-            print(self.lang_dict[self.lang]['cidr'].format(self.ip, self.mask_length))
+            print(self.lang_dict['cidr'].format(self.ip, self.mask_length))
         print("{} - {}".format(self.network_range['start'], self.network_range['end']))
         if advanced is True:
-            print(self.lang_dict[self.lang]['addr_avail_advanced'].format(occupied, self.addresses))
+            print(self.lang_dict['addr_avail_advanced'].format(occupied, self.addresses))
         else:
-            print(self.lang_dict[self.lang]['addr_avail'].format(self.addresses))
+            print(self.lang_dict['addr_avail'].format(self.addresses))
         print('')
-        print(self.lang_dict[self.lang]['utils'].format(len(self.subnets), t))
+        print(self.lang_dict['utils'].format(len(self.subnets), t))
 
         for i in range(len(self.subnets)):
             if advanced is True:
-                print(self.lang_dict[self.lang]['sub_addr_advanced'].format(self.subnets[i]['start'],
-                                                                            self.subnets[i]['end'],
-                                                                            2 ** self.submasks_machine_bits[i] - 2,
-                                                                            self.subnets_sizes[i]))
+                print(self.lang_dict['sub_addr_advanced'].format(self.subnets[i]['start'],
+                                                                 self.subnets[i]['end'],
+                                                                 2 ** self.submasks_machine_bits[i] - 2,
+                                                                 self.subnets_sizes[i]))
             else:
-                print(self.lang_dict[self.lang]['sub_addr'].format(self.subnets[i]['start'], self.subnets[i]['end'],
-                                                                   2 ** self.submasks_machine_bits[i] - 2))
+                print(self.lang_dict['sub_addr'].format(self.subnets[i]['start'], self.subnets[i]['end'],
+                                                        2 ** self.submasks_machine_bits[i] - 2))
 
         print('')
-        print(self.lang_dict[self.lang]['net_usage'])
+        print(self.lang_dict['net_usage'])
         print(graph)
 
     def _find_start_of_next_subnet_range(self, end):
         def _check(idx, content):
             if idx == 0 and content[idx] == '255':
-                raise Exception(self.error_dict[self.lang]['network_limit'])
+                raise Exception(self.error_dict['network_limit'])
 
             if content[idx] == '255':
                 content[idx] = '0'
@@ -86,8 +80,8 @@ class SubnetworkBuilder(NetworkBasic):
 
         self.submasks_machine_bits = submasks
 
-    def __init__(self, starting_ip, mask, subnets_sizes, lang=None):
-        super().__init__(starting_ip, mask, lang=lang)
+    def __init__(self, starting_ip, mask, subnets_sizes):
+        super().__init__(starting_ip, mask)
         self.subnets_sizes = sorted(subnets_sizes, reverse=True)
 
         # first, let's check if the provided mask can handle all the addresses requested
@@ -97,13 +91,13 @@ class SubnetworkBuilder(NetworkBasic):
         total = 0
 
         for i in range(len(self.submasks_machine_bits)):
-            total += 2**self.submasks_machine_bits[i]
+            total += 2 ** self.submasks_machine_bits[i]
 
         if self.addresses < total:
             power = 1
-            while total > 2**power:
+            while total > 2 ** power:
                 power += 1
-            raise Exception(self.error_dict[self.lang]['mask_too_small'].format(self.mask_length, 32-power))
+            raise Exception(self.error_dict['mask_too_small'].format(self.mask_length, 32 - power))
 
     def build_subnets(self, returning=None, display=None, advanced=None):
 

@@ -1,6 +1,7 @@
 import NetworkUtilities.core.network_basic as nb
 import NetworkUtilities.core.errors as er
 import unittest
+import unittest.mock as mock
 
 
 class NetworkBasicTests(unittest.TestCase):
@@ -57,7 +58,7 @@ class NetworkBasicTests(unittest.TestCase):
         self.assertEqual(inst.determine_type('192.168.1.0'), 0)
 
         # Computer address
-        self.assertEqual(inst.determine_type('192.168.1.225'), 1)
+        self.assertEqual(inst.determine_type('192.168.1.4'), 1)
 
         # Broadcast address
         self.assertEqual(inst.determine_type('192.168.1.255'), 2)
@@ -78,3 +79,106 @@ class NetworkBasicTests(unittest.TestCase):
         self.assertRaises(er.RFCRulesWrongCoupleException, lambda: nb.NetworkBasic('192.168.1.0', 15))
         self.assertRaises(er.RFCRulesWrongCoupleException, lambda: nb.NetworkBasic('172.16.1.0', 11))
         self.assertRaises(er.RFCRulesWrongCoupleException, lambda: nb.NetworkBasic('10.0.1.0', 7))
+
+
+class NetworkBasicDisplays(unittest.TestCase):
+
+    #
+    # Ranges display
+    #
+    @mock.patch('builtins.print')
+    def test_display_range(self, mocked_print):
+        nb.NetworkBasicDisplayer('192.168.1.0', 24).display_range()
+        self.assertEqual([mock.call({'start': '192.168.1.0', 'end': '192.168.1.255'})], mocked_print.mock_calls)
+
+    @mock.patch('builtins.print')
+    def test_fancy_display_range(self, mocked_print):
+        inst = nb.NetworkBasicDisplayer('192.168.1.0', 24)
+        inst.display_range(display=True)
+
+        expected_list = [
+            mock.call("Network:"),
+            mock.call(f"CIDR : {inst.ip}/{inst.mask_length}"),
+            mock.call(f"{inst.network_range['start']} - {inst.network_range['end']}"),
+            mock.call(f"{inst.addresses} available addresses")
+        ]
+
+        self.assertEqual(expected_list, mocked_print.mock_calls)
+
+    #
+    # Normal types displays
+    #
+    @mock.patch('builtins.print')
+    def test_type_network(self, mocked_print):
+        # Network address
+        self._prepare_type_display('192.168.1.0', display=False)
+        self.assertEqual([
+            mock.call({'start': '192.168.1.0', 'end': '192.168.1.255', 'address_type': 'network'})
+        ], mocked_print.mock_calls, msg='Normal display: network address')
+
+    @mock.patch('builtins.print')
+    def test_type_computer(self, mocked_print):
+        # Computer address
+        self._prepare_type_display('192.168.1.4', display=False)
+        self.assertEqual([
+            mock.call({'start': '192.168.1.0', 'end': '192.168.1.255', 'address_type': 'computer'})
+        ], mocked_print.mock_calls, msg='Normal display: computer address')
+
+    @mock.patch('builtins.print')
+    def test_type_broadcast(self, mocked_print):
+        # Broadcast address
+        self._prepare_type_display('192.168.1.255', display=False)
+        self.assertEqual([
+            mock.call({'start': '192.168.1.0', 'end': '192.168.1.255', 'address_type': 'broadcast'})
+        ], mocked_print.mock_calls, msg='Normal display: broadcast address')
+
+    #
+    # Fancy types displays
+    #
+    @staticmethod
+    def _prepare_type_display(machine_ip, display=True):
+        inst = nb.NetworkBasicDisplayer('192.168.1.0', 24)
+        inst.determine_network_range()
+
+        inst.display_type(machine_ip, display=display)
+
+        return inst
+
+    @mock.patch('builtins.print')
+    def test_fancy_type_network(self, mocked_print):
+        # Network address
+        inst = self._prepare_type_display('192.168.1.0')
+        self.assertEqual([
+            mock.call("Network:"),
+            mock.call(f"CIDR : {inst.ip}/{inst.mask_length}"),
+            mock.call(f"{inst.network_range['start']} - {inst.network_range['end']}"),
+            mock.call(f"{inst.addresses} available addresses"),
+            mock.call(''),
+            mock.call("The address 192.168.1.0 is a network address")
+        ], mocked_print.mock_calls, msg='Fancy display: network address')
+
+    @mock.patch('builtins.print')
+    def test_fancy_type_computer(self, mocked_print):
+        # Computer address
+        inst = self._prepare_type_display('192.168.1.4')
+        self.assertEqual([
+            mock.call("Network:"),
+            mock.call(f"CIDR : {inst.ip}/{inst.mask_length}"),
+            mock.call(f"{inst.network_range['start']} - {inst.network_range['end']}"),
+            mock.call(f"{inst.addresses} available addresses"),
+            mock.call(''),
+            mock.call("The address 192.168.1.4 is a computer address")
+        ], mocked_print.mock_calls, msg='Fancy display: computer address')
+
+    @mock.patch('builtins.print')
+    def test_fancy_type_broadcast(self, mocked_print):
+        # Broadcast address
+        inst = self._prepare_type_display('192.168.1.255')
+        self.assertEqual([
+            mock.call("Network:"),
+            mock.call(f"CIDR : {inst.ip}/{inst.mask_length}"),
+            mock.call(f"{inst.network_range['start']} - {inst.network_range['end']}"),
+            mock.call(f"{inst.addresses} available addresses"),
+            mock.call(''),
+            mock.call("The address 192.168.1.255 is a broadcast address")
+        ], mocked_print.mock_calls, msg='Fancy display: broadcast address')
