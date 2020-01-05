@@ -90,54 +90,57 @@ class NetworkBasic:
         }
     }
 
-    @staticmethod
-    def __dec_to_bin(x):
-        return int(bin(x)[:2])
+    #
+    # DUNDERS
+    #
+    def __init__(self, ip, mask=None, lang=None):
+        """
+        The mask is an optional parameter in case the CIDR is passed into the ip parameter.
+        The CIDR, as in its definition, can only be expressed with the mask length:
+            - 192.168.1.0/24 is a valid CIDR and will be accepted
+            - 192.168.1.0/255.255.255.0 is not a valid CIDR and will raise an Exception
 
-    def _switch_length(self, mask_length, index=False):
-        if index:
-            return self.mask_allowed_bytes.index(mask_length)
+        CIDR informations can be found here: https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing
+
+        :param ip: The ip that starts the range
+        :param mask: The mask literal or length
+        :param lang: lang if lang is defined else french. Current supported: en, fr
+        :raises:
+            MaskNotProvided: If the mask parameter is None and the ip parameter is not a valid CIDR
+        """
+
+        if mask is None:
+            try:
+                ip, mask = ip.split('/')
+                self.ip = ip
+                self.mask = mask
+            except ValueError:
+                raise MaskNotProvided(ip)
         else:
-            return self.mask_allowed_bytes[mask_length]
+            self.ip = ip
+            self.mask = mask
+        self.lang = lang if lang else 'fr'
 
-    def mask_length_to_readable(self, mask_length):
-        if mask_length <= 8:
-            result = "{}.0.0.0".format(self._switch_length(mask_length))
-        elif 8 < mask_length <= 16:
-            mask_length -= 8
-            result = "255.{}.0.0".format(self._switch_length(mask_length))
-        elif 16 < mask_length <= 24:
-            mask_length -= 16
-            result = "255.255.{}.0".format(self._switch_length(mask_length))
-        elif 24 < mask_length <= 32:
-            mask_length -= 24
-            result = "255.255.255.{}".format(self._switch_length(mask_length))
-        else:
-            raise MaskLengthOffBoundsException(self.lang, mask_length)
-        return result
+        self._verify_provided_types()
+        self.calculate_mask()
+        self._verify_rfc_rules()
 
-    def _display(self, is_prober=False):
-        print(self.lang_dict[self.lang]['network'])
-        print(self.lang_dict[self.lang]['cidr'].format(self.ip, self.mask_length))
-        if is_prober:
-            print("Estimated range from probing : {} - {}".format(self.network_range['start'],
-                                                                  self.network_range['end']))
-        else:
-            print("{} - {}".format(self.network_range['start'], self.network_range['end']))
-        print(self.lang_dict[self.lang]['addr_avail'].format(self.addresses))
-
-        if self.address_type is not None:
-            print('')
-
-            if self.address_type in [0, 1, 2]:
-                types = ['net', 'mac', 'bct']
-                machine_type = self.lang_dict[self.lang]['addr_types'][types[self.address_type]]
-            else:
-                raise Exception("Given address type other than expected address types")
-
-            print(self.lang_dict[self.lang]['addr_type'].format(self.ip, machine_type))
-
+    #
+    # __init__ Tests
+    #
     def _verify_provided_types(self):
+        """
+        Verifies the provided types (ip, and mask). If a CIDR was passed, the __init__ took care of the spliting into
+        respective ip and mask.
+
+        :raises:
+            IPBytesLengthException: If the IP block is not 4 bytes long.
+            IPByteNumberOffLimitsException: If a byte from the IP is not between 0 and 255
+            MaskBytesLengthException! If the mask is not 4 bytes long.
+            MaskByteNumberOffLimitsException: If a byte from the mask is not between 0 and 255
+            MaskLengthOffBoundsException: If the mask length is not between 0 and 32
+        """
+
         temp = self.ip.split('.')
         if len(temp) != 4:
             raise IPBytesLengthException(self.lang, len(temp))
@@ -159,32 +162,6 @@ class NetworkBasic:
                 return
             else:
                 raise MaskLengthOffBoundsException(self.lang, self.mask)
-
-    def _verify_rfc_rules(self):
-        # For more information on RFC 1918 standards, check https://tools.ietf.org/html/rfc1918
-        def _check(content):
-            ip_test = False
-            for I in range(3):
-                if (int(content[0]) == self.rfc_allowed_ranges[I][0]) and \
-                        (self.rfc_allowed_ranges[I][1][0] <= int(content[1]) <= self.rfc_allowed_ranges[I][1][1]):
-                    ip_test = True
-                    self.rfc_current_range = I
-
-            if ip_test is False:
-                raise RFCRulesIPWrongRangeException(self.lang, ip[0], ip[1])
-
-        ip = self.ip.split('.')
-        mask = self.mask_length
-
-        # We check that ip respects RFC standards
-        _check(ip)
-
-        # We then check that provided mask corresponds to RFC standards
-        for i in range(3):
-            allowed = self.rfc_allowed_ranges[i][0]
-            allowed_mask = self.rfc_masks[i]
-            if (int(ip[0]) == allowed) and (mask < allowed_mask):
-                raise RFCRulesWrongCoupleException(self.lang, ip[0], ip[1], allowed_mask, mask)
 
     def calculate_mask(self):
         """
@@ -231,29 +208,117 @@ class NetworkBasic:
         except AttributeError:
             # The mask is given by its length
             self.mask_length = int(self.mask)
-            self.mask = self.mask_length_to_readable(self.mask_length)
+            self.mask = self.mask_length_to_literal(self.mask_length)
 
         finally:
             self.addresses = 2 ** (32 - self.mask_length) - 2
 
-    def __init__(self, ip, mask=None, lang=None):
-        if mask is None:
-            try:
-                ip, mask = ip.split('/')
-                self.ip = ip
-                self.mask = mask
-            except ValueError:
-                raise MaskNotProvided(ip)
+    def _verify_rfc_rules(self):
+        """
+        Verifies that both the IP and the mask match RFC standards
+
+        For more information on RFC 1918 standards, check https://tools.ietf.org/html/rfc1918
+
+        :raises:
+            RFCRulesIPWrongRangeException: If the range is not one of the three stated by RFC 1918:
+                - 192.168/16 prefix (IP starting by 192.168 and mask length greater or equal to 16)
+                - 172.16/12 prefix (IP starting by 172.16 and mask length greater or equal to 12)
+                - 10/8 prefix (IP starting by 10 and mask length greater or equal to 8)
+            RFCRulesWrongCoupleException: If the mask length is lesser than the one stated above
+        """
+
+        def _check(content):
+            ip_test = False
+            for I in range(3):
+                if (int(content[0]) == self.rfc_allowed_ranges[I][0]) and \
+                        (self.rfc_allowed_ranges[I][1][0] <= int(content[1]) <= self.rfc_allowed_ranges[I][1][1]):
+                    ip_test = True
+                    self.rfc_current_range = I
+
+            if ip_test is False:
+                raise RFCRulesIPWrongRangeException(self.lang, ip[0], ip[1])
+
+        ip = self.ip.split('.')
+        mask = self.mask_length
+
+        # We check that ip respects RFC standards
+        _check(ip)
+
+        # We then check that provided mask corresponds to RFC standards
+        for i in range(3):
+            allowed = self.rfc_allowed_ranges[i][0]
+            allowed_mask = self.rfc_masks[i]
+            if (int(ip[0]) == allowed) and (mask < allowed_mask):
+                raise RFCRulesWrongCoupleException(self.lang, ip[0], ip[1], allowed_mask, mask)
+
+    #
+    # Dispatchers
+    #   Functions that recieve a complex part excluded from the main function they are called from
+    #
+    @staticmethod
+    def __dec_to_bin(x):
+        return int(bin(x)[:2])
+
+    def _switch_length(self, mask_length, index=False):
+        if index:
+            return self.mask_allowed_bytes.index(mask_length)
         else:
-            self.ip = ip
-            self.mask = mask
-        self.lang = lang if lang else 'fr'
+            return self.mask_allowed_bytes[mask_length]
 
-        self._verify_provided_types()
-        self.calculate_mask()
-        self._verify_rfc_rules()
+    def mask_length_to_literal(self, mask_length):
+        if mask_length <= 8:
+            result = "{}.0.0.0".format(self._switch_length(mask_length))
+        elif 8 < mask_length <= 16:
+            mask_length -= 8
+            result = "255.{}.0.0".format(self._switch_length(mask_length))
+        elif 16 < mask_length <= 24:
+            mask_length -= 16
+            result = "255.255.{}.0".format(self._switch_length(mask_length))
+        elif 24 < mask_length <= 32:
+            mask_length -= 24
+            result = "255.255.255.{}".format(self._switch_length(mask_length))
+        else:
+            raise MaskLengthOffBoundsException(self.lang, mask_length)
+        return result
 
+    #
+    # Template for child classes
+    #
+    def _display(self, is_prober=False):
+        print(self.lang_dict[self.lang]['network'])
+        print(self.lang_dict[self.lang]['cidr'].format(self.ip, self.mask_length))
+        if is_prober:
+            print("Estimated range from probing : {} - {}".format(self.network_range['start'],
+                                                                  self.network_range['end']))
+        else:
+            print("{} - {}".format(self.network_range['start'], self.network_range['end']))
+        print(self.lang_dict[self.lang]['addr_avail'].format(self.addresses))
+
+        if self.address_type is not None:
+            print('')
+
+            if self.address_type in [0, 1, 2]:
+                types = ['net', 'mac', 'bct']
+                machine_type = self.lang_dict[self.lang]['addr_types'][types[self.address_type]]
+            else:
+                raise Exception("Given address type other than expected address types")
+
+            print(self.lang_dict[self.lang]['addr_type'].format(self.ip, machine_type))
+
+    #
+    # Main functions
+    #
     def determine_network_range(self, start_ip=None, machine_bits=None, addresses_list=None):
+        """
+
+        :param start_ip: The ip we have to start the range from. Used only by the SubnetworkBuilder class
+        :param machine_bits: Used to pass machine bits instead of network bits. Used by SubnetworkBuilder class
+        :param addresses_list: If one wants the list of each ip constituting the range
+        :return:
+            result: the determined range
+            liste: the list of addresses in the range
+        """
+
         start = self.ip if start_ip is None else start_ip
         machine_bits = 32 - self.mask_length if machine_bits is None else machine_bits
 
@@ -308,6 +373,16 @@ class NetworkBasic:
             return result
 
     def determine_type(self, machine_ip):
+        """
+        Determines the type of the given ip.
+
+        :param machine_ip: The IP we want to have the type of.
+        :return:
+            address_type: the address type of the machine
+        :raises:
+            IPOffNetworkRangeException: If the given IP is not in the network range
+        """
+
         def _check_end(machine_ip_, idx=3):
             if self.network_range['end'].split('.')[idx] >= machine_ip_.split('.')[idx]:
                 if idx == 0:
