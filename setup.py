@@ -10,7 +10,7 @@ if sys.version_info[:2] < (3, 6):
 
 MAJOR = 0
 MINOR = 2
-MICRO = 2
+MICRO = 3
 IS_RELEASED = False
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 

@@ -214,10 +214,6 @@ class NetworkBasic:
     # Dispatchers
     #   Functions that recieve a complex part excluded from the main function they are called from
     #
-    @staticmethod
-    def __dec_to_bin(x):
-        return int(bin(x)[:2])
-
     def _switch_length(self, mask_length, index=False):
         if index:
             return self.mask_allowed_bytes.index(mask_length)
@@ -225,6 +221,7 @@ class NetworkBasic:
             return self.mask_allowed_bytes[mask_length]
 
     def mask_length_to_literal(self, mask_length):
+        result = ''
         if mask_length <= 8:
             result = "{}.0.0.0".format(self._switch_length(mask_length))
         elif 8 < mask_length <= 16:
@@ -236,8 +233,6 @@ class NetworkBasic:
         elif 24 < mask_length <= 32:
             mask_length -= 24
             result = "255.255.255.{}".format(self._switch_length(mask_length))
-        else:
-            raise MaskLengthOffBoundsException(self.lang, mask_length)
         return result
 
     #
@@ -281,10 +276,20 @@ class NetworkBasic:
         start = self.ip if start_ip is None else start_ip
         machine_bits = 32 - self.mask_length if machine_bits is None else machine_bits
 
-        # gives the range of the network depending on the mask
         def _check(idx, content):
-            if idx == 0 and content[idx] == 255:
-                raise NetworkLimitException(self.lang)
+            # With these conditions, we prevent networks from going out of the RFC local ranges
+            if self.rfc_current_range == 2:
+                # Class A network, limits are 10.0.0.0 - 10.255.255.255
+                if idx == 1 and content[idx] == 255:
+                    raise NetworkLimitException(self.lang)
+            elif self.rfc_current_range == 1:
+                # Class B network, limits are 172.16.0.0 - 172.31.255.255
+                if idx == 1 and content[idx] == 31:
+                    raise NetworkLimitException(self.lang)
+            elif self.rfc_current_range == 0:
+                # Class C network, limits are 192.168.0.0 - 192.168.255.255
+                if idx == 2 and content[idx] == 255:
+                    raise NetworkLimitException(self.lang)
 
             if content[idx] == 255:
                 content[idx] = 0

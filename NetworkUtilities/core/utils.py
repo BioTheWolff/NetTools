@@ -84,3 +84,10 @@ class Utils:
 
         if _check_end(ip) or _check_start(ip):
             raise IPOffNetworkRangeException()
+
+    #
+    # Others
+    #
+    @staticmethod
+    def __dec_to_bin(x):
+        return int(bin(x)[:2])

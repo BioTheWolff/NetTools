@@ -4,7 +4,7 @@ import netifaces
 
 class NetworkProber(NetworkBasic):
 
-    def __init__(self, lang=None):
+    def __init__(self):
         ip, mask = None, None
         inet = netifaces.AF_INET
         addrs_raw, addrs_clean = [], []
@@ -22,7 +22,7 @@ class NetworkProber(NetworkBasic):
                     mask = elem[0]['netmask']
                     break
 
-        super().__init__(ip, mask, lang)
+        super().__init__(ip, mask)
 
     def determine_range_reverse(self, start_ip, machine_bits):
         def _check(idx, content):

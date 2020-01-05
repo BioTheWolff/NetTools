@@ -11,4 +11,4 @@ class SubnetBuilderTests(unittest.TestCase):
             {'start': '192.168.33.0', 'end': '192.168.48.255'},
             {'start': '192.168.49.0', 'end': '192.168.56.255'}
         ]
-        self.assertEqual(inst.build_subnets(returning=True), expected_list)
+        self.assertEqual(expected_list, inst.build_subnets(returning=True))

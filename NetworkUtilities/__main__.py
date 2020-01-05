@@ -35,33 +35,22 @@ def main():
     prober.add_argument("-R", "--raw", help="Returns the network range instad of displaying a smooth recap",
                         action="store_false")
 
-    # lang
-    lang = parser.add_mutually_exclusive_group()
-    lang.add_argument("-E", "--english", help="Sets the display language to English",
-                      action="store_true")
-    lang.add_argument("-F", "--french", help="Affiche le récapitulatif en français", action="store_true")
-
     args = parser.parse_args()
-
-    if args.english is True:
-        lang = 'english'
-    else:
-        lang = None
 
     if args.subparser == "network":
         if args.type:
-            net = NetworkBasicDisplayer(args.ip, args.mask, lang=lang)
+            net = NetworkBasicDisplayer(args.ip, args.mask)
             net.display_type(args.type, display=args.raw)
         else:
-            net = NetworkBasicDisplayer(args.ip, args.mask, lang=lang)
+            net = NetworkBasicDisplayer(args.ip, args.mask)
             net.display_range(display=args.raw)
 
     elif args.subparser == "subnet":
-        net = SubnetworkBuilder(args.ip, args.mask, args.subnets_sizes, lang=lang)
+        net = SubnetworkBuilder(args.ip, args.mask, args.subnets_sizes)
         net.build_subnets(display=args.raw, advanced=args.advanced)
 
     elif args.subparser == "probe":
-        net = NetworkProbingDisplayer(lang=lang)
+        net = NetworkProbingDisplayer()
         net.display_range(display=args.raw)
 
 
