@@ -154,7 +154,7 @@ class NetworkBasic:
                     # contains only a 0, else we raise an IncorrectMaskException
                     if concerned < 255:
                         for i in range(1, 4 - byte):
-                            if temp[byte + i] != 0:
+                            if temp[byte + i] != '0':
                                 raise IncorrectMaskException(self.lang)
 
                     length += self._switch_length(concerned, index=True)

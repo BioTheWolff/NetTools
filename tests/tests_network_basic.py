@@ -24,6 +24,48 @@ class NetworkBasicTests(unittest.TestCase):
         # Mask not provided Exception
         self.assertRaises(er.MaskNotProvided, lambda: self._test_range('192.168.1.0', None))
 
+    @staticmethod
+    def test_trying_masks_literals():
+
+        masks = [
+            # Class A and less
+            '255.0.0.0',
+            '255.128.0.0',
+            '255.192.0.0',
+            '255.224.0.0',
+            '255.240.0.0',
+            '255.248.0.0',
+            '255.252.0.0',
+            '255.254.0.0',
+            # Class B and less
+            '255.255.0.0',
+            '255.255.128.0',
+            '255.255.192.0',
+            '255.255.224.0',
+            '255.255.240.0',
+            '255.255.248.0',
+            '255.255.252.0',
+            '255.255.254.0',
+            # Class C and less
+            '255.255.255.0',
+            '255.255.255.128',
+            '255.255.255.192',
+            '255.255.255.224',
+            '255.255.255.240',
+            '255.255.255.248',
+            '255.255.255.252',
+            '255.255.255.254'
+        ]
+
+        for mask in masks:
+            nb.NetworkBasic('10.0.0.0', mask)
+
+    @staticmethod
+    def test_trying_masks_lengths():
+
+        for i in range(8, 32):
+            nb.NetworkBasic('10.0.0.0', i)
+
     #
     # RFC
     #
@@ -86,8 +128,10 @@ class NetworkBasicTests(unittest.TestCase):
         # Mask byte off limits
         self.assertRaises(er.MaskByteNumberOffLimitsException, lambda: self._test_range('192.168.1.0', '255.255.0.999'))
 
-        # Incorrect mask literal
+        # Incorrect mask literals:
+        # Byte not allowed
         self.assertRaises(er.IncorrectMaskException, lambda: self._test_range('192.168.1.0', '255.255.195.0'))
+        # Non-empty byte after byte < 255
         self.assertRaises(er.IncorrectMaskException, lambda: self._test_range('192.168.1.0', '255.255.254.255'))
 
     #
