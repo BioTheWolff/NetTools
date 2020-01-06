@@ -78,9 +78,6 @@ def setup_package():
             'NetworkUtilities.core',
             'NetworkUtilities.utils'
         ],
-        install_requires=[
-            "pytest",
-        ],
 
         python_requires='>=3.6',
         zip_safe=False,
