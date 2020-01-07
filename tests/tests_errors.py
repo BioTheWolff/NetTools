@@ -106,7 +106,3 @@ class ErrorsInstanciationTests(unittest.TestCase):
 
         self.assertEqual([m.call("IPv4 top limit (255.255.255.255) reached")],
                          mocked_print.mock_calls)
-
-
-if __name__ == '__main__':
-    unittest.main()
