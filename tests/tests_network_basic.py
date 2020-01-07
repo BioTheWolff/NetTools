@@ -112,10 +112,10 @@ class NetworkBasicTests(unittest.TestCase):
     def test_ip_errors(self):
 
         # Missing one IP byte
-        self.assertRaises(er.IPBytesLengthException, lambda: self._test_range('192.168.1', 24))
+        self.assertRaises(er.BytesLengthException, lambda: self._test_range('192.168.1', 24))
 
         # Byte off range
-        self.assertRaises(er.IPByteNumberOffLimitsException, lambda: self._test_range('192.168.999.1', 24))
+        self.assertRaises(er.ByteNumberOffLimitsException, lambda: self._test_range('192.168.999.1', 24))
 
     def test_mask_errors(self):
 
@@ -123,10 +123,10 @@ class NetworkBasicTests(unittest.TestCase):
         self.assertRaises(er.MaskLengthOffBoundsException, lambda: self._test_range('192.168.1.0', 33))
 
         # Wrong mask literal bytes length
-        self.assertRaises(er.MaskBytesLengthException, lambda: self._test_range('192.168.1.0', '255.255.255'))
+        self.assertRaises(er.BytesLengthException, lambda: self._test_range('192.168.1.0', '255.255.255'))
 
         # Mask byte off limits
-        self.assertRaises(er.MaskByteNumberOffLimitsException, lambda: self._test_range('192.168.1.0', '255.255.0.999'))
+        self.assertRaises(er.ByteNumberOffLimitsException, lambda: self._test_range('192.168.1.0', '255.255.0.999'))
 
         # Incorrect mask literals:
         # Byte not allowed

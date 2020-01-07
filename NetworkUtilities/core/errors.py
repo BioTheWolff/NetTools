@@ -1,73 +1,40 @@
 # BYTES LENGTH
-class IPBytesLengthException(Exception):
-    def __init__(self, lang, bytes_):
-        self.lang = lang
+class BytesLengthException(Exception):
+    def __init__(self, type_, bytes_):
+        self.type = type_
         self.bytes = bytes_
 
     def __repr__(self):
-        if self.lang == 'raw':
-            return self.bytes
-        elif self.lang == 'fr':
-            return f"L'IP doit faire 4 octets, trouvé {self.bytes} octect(s)"
-        else:
-            return f"IP must be 4 bytes long, found {self.bytes} byte(s)"
+        return f"{self.type} must be 4 bytes long, found {self.bytes} byte(s)."
 
-
-class MaskBytesLengthException(Exception):
-    def __init__(self, lang, bytes_):
-        self.lang = lang
-        self.bytes = bytes_
-
-    def __repr__(self):
-        if self.lang == 'raw':
-            return self.bytes
-        elif self.lang == 'fr':
-            return f"Le masque doit faire 4 octets, trouvé {self.bytes} octect(s)"
-        else:
-            return f"Mask must be 4 bytes long, found {self.bytes} byte(s)"
+    def __str__(self):
+        return self.__repr__()
 
 
 # NUMBER OFF LIMITS
-class IPByteNumberOffLimitsException(Exception):
-    def __init__(self, lang, nb, byte):
-        self.lang = lang
-        self.nb = nb
+class ByteNumberOffLimitsException(Exception):
+    def __init__(self, type_, nb, byte):
+        self.type = type_
         self.byte = byte
+        self.nb = nb
 
     def __repr__(self):
-        if self.lang == 'raw':
-            return {'byte': self.byte, 'number': self.nb}
-        elif self.lang == 'fr':
-            return f"Les octects de l'IP doivent être entre 0 et 255. Trouvé {self.nb} à l'octect {self.byte}"
-        else:
-            return f"IP bytes must be between 0 and 255. Found {self.nb} at byte {self.byte}"
+        return f"{self.type} bytes must be between 0 and 255. Found {self.nb} at byte {self.byte}"
 
-
-class MaskByteNumberOffLimitsException(Exception):
-    def __init__(self, lang, nb, byte):
-        self.lang = lang
-        self.nb = nb
-        self.byte = byte
-
-    def __repr__(self):
-        if self.lang == 'raw':
-            return {'byte': self.byte, 'number': self.nb}
-        elif self.lang == 'fr':
-            return f"Les octects du masque doivent être entre 0 et 255. Trouvé {self.nb} à l'octect {self.byte}"
-        else:
-            return f"Mask bytes must be between 0 and 255. Found {self.nb} at byte {self.byte}"
+    def __str__(self):
+        return self.__repr__()
 
 
 # OFF NETWORK RANGE
 class IPOffNetworkRangeException(Exception):
-    def __init__(self, lang='en'):
-        self.lang = lang
+    def __init__(self, ip):
+        self.ip = ip
 
     def __repr__(self):
-        if self.lang == 'fr':
-            return "L'adresse IP n'est pas dans la plage réseau."
-        else:
-            return "IP address not in network range."
+        return f"IP address {self.ip} not in network range."
+
+    def __str__(self):
+        return self.__repr__()
 
 
 # MASK SPECIFIC ERRORS
@@ -78,97 +45,91 @@ class MaskNotProvided(Exception):
     def __repr__(self):
         return f"Could not find IP and mask in given cidr {self.cidr}"
 
+    def __str__(self):
+        return self.__repr__()
+
 
 class MaskLengthOffBoundsException(Exception):
-    def __init__(self, lang, length):
-        self.lang = lang
+    def __init__(self, length):
         self.length = length
 
     def __repr__(self):
-        if self.lang == 'raw':
-            return self.length
-        elif self.lang == 'fr':
-            return f"Longueur du masque ({self.length}) hors limites [0-32]"
-        else:
-            return f"Provided mask length ({self.length}) out of bounds [0-32]"
+        return f"Provided mask length ({self.length}) out of bounds [0-32]"
+
+    def __str__(self):
+        return self.__repr__()
 
 
 class IncorrectMaskException(Exception):
-    def __init__(self, lang):
-        self.lang = lang
+    def __init__(self, is_out_allowed, value, extra=None):
+        self.is_out_allowed = is_out_allowed
+        self.value = value
+        self.extra = extra
 
     def __repr__(self):
-        if self.lang == 'fr':
-            return "Masque incorrect. Valeurs acceptées: [0,128,192,224,240,248,242,254,255"
+        if self.is_out_allowed:
+            # Value out of allowed values list
+            return f"Incorrect mask. Allowed values are [0,128,192,224,240,248,242,254,255], found {self.value}"
         else:
-            return "Incorrect mask. Allowed values: [0,128,192,224,240,248,242,254,255]"
+            # Mask byte not empty after byte < 255
+            return f"Mask bytes must all be empty (0) after a byte with a value under 255, found {self.value} " \
+                   f"at byte {self.extra}"
+
+    def __str__(self):
+        return self.__repr__()
 
 
 class MaskTooSmallException(Exception):
-    def __init__(self, lang, given, advised):
-        self.lang = lang
+    def __init__(self, given, advised):
         self.given = given
         self.advised = advised
 
     def __repr__(self):
-        if self.lang == 'raw':
-            return {'given': self.given, 'advised': self.advised}
-        elif self.lang == 'fr':
-            return f"La longueur du masque donnée ({self.given}) ne peut contenir toutes les adresses des " \
-                   f"sous-réseaux. Longueur conseillée : {self.advised}"
-        else:
-            return f"Given mask length ({self.given}) cannot handle all the addresses of the subnetworks. " \
-                   f"Advised length : {self.advised}"
+        return f"Given mask length ({self.given}) cannot handle all the addresses of the subnetworks. " \
+               f"Advised length : {self.advised}"
+
+    def __str__(self):
+        return self.__repr__()
 
 
 # RFC EXCEPTIONS
 class RFCRulesIPWrongRangeException(Exception):
-    def __init__(self, lang, first, second):
-        self.lang = lang
+    def __init__(self, first, second):
         self.f = first
         self.s = second
 
     def __repr__(self):
-        if self.lang == 'raw':
-            return {'first': self.f, 'second': self.s}
-        elif self.lang == 'fr':
-            return f"L'IP doit être sous la forme 192.168.x.x , 172.16.x.x ou 10.0.x.x; trouvé {self.f}.{self.s}.x.x"
-        else:
-            return f"IP must be either 192.168.x.x , 172.16.x.x or 10.0.x.x; found {self.f}.{self.s}.x.x"
+        return f"IP must be either 192.168.x.x , 172.16.x.x or 10.0.x.x; found {self.f}.{self.s}.x.x"
+
+    def __str__(self):
+        return self.__repr__()
 
 
 class RFCRulesWrongCoupleException(Exception):
-    def __init__(self, lang, first, second, required, given):
-        self.lang = lang
+    def __init__(self, first, second, required, given):
         self.f = first
         self.s = second
         self.r = required
         self.g = given
 
     def __repr__(self):
-        if self.lang == 'raw':
-            return {'first': self.f, 'second': self.s, 'required': self.r, 'given': self.g}
-        elif self.lang == 'fr':
-            return f"Selon les standards RFC, le couple doit être {self.f}.{self.s}.x.x/>={self.r}, " \
-                   f"trouvé masque de longueur {self.g}"
-        else:
-            return f"According to RFC standards, given couple must be {self.f}.{self.s}.x.x/>={self.r}, " \
-                   f"found mask length {self.g}"
+        return f"According to RFC standards, given couple must be {self.f}.{self.s}.x.x/>={self.r}, " \
+               f"found mask length {self.g}"
+
+    def __str__(self):
+        return self.__repr__()
 
 
 # NETWORK LIMIT
 class NetworkLimitException(Exception):
-    def __init__(self, lang):
-        self.lang = lang
-
     def __repr__(self):
-        if self.lang == 'fr':
-            return "Limite 255.255.255.255 atteinte en essayant de définir une plage (de sous-)réseau."
-        else:
-            return "Limit 255.255.255.255 reached while trying to determine (sub)network range."
+        return "RFC range limit reached while trying to determine network range."
+
+    def __str__(self):
+        return self.__repr__()
 
 
-class NetworkLimitError(Exception):
+class IPv4LimitError(Exception):
 
     def __init__(self, type_):
         self.type = type_
@@ -177,5 +138,8 @@ class NetworkLimitError(Exception):
         elif type_ == 'top':
             self.display = "255.255.255.255"
 
+    def __repr__(self):
+        return f"IPv4 {self.type} limit ({self.display}) reached"
+
     def __str__(self):
-        return f"Network {self.type} limit ({self.display}) reached"
+        return self.__repr__()

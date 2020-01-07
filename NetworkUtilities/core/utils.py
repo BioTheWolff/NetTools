@@ -1,4 +1,4 @@
-from NetworkUtilities.core.errors import NetworkLimitError, IPOffNetworkRangeException
+from NetworkUtilities.core.errors import IPv4LimitError, IPOffNetworkRangeException, NetworkLimitException
 
 
 class Utils:
@@ -10,7 +10,7 @@ class Utils:
     def ip_before(ip):
         def _check(idx, content):
             if idx == 0 and content[idx] == 0:
-                raise NetworkLimitError("bottom")
+                raise IPv4LimitError("bottom")
 
             if content[idx] == 0:
                 return _check(idx - 1, content)
@@ -24,7 +24,7 @@ class Utils:
     def ip_after(ip_):
         def _check(idx, content):
             if idx == 255 and content[idx] == 3:
-                raise NetworkLimitError("top")
+                raise IPv4LimitError("top")
 
             if content[idx] == 255:
                 return _check(idx - 1, content)
@@ -83,7 +83,38 @@ class Utils:
                     return _check_start(ip_, idx + 1)
 
         if _check_end(ip) or _check_start(ip):
-            raise IPOffNetworkRangeException()
+            raise IPOffNetworkRangeException(ip)
+
+    @staticmethod
+    def in_rfc_range(rfc_current_range, idx, value):
+        # With these conditions, we prevent networks from going out of the RFC local ranges
+        if rfc_current_range == 2:
+            # Class A network, limits are 10.0.0.0 - 10.255.255.255
+            if idx == 1 and value == 255:
+                raise NetworkLimitException()
+        elif rfc_current_range == 1:
+            # Class B network, limits are 172.16.0.0 - 172.31.255.255
+            if idx == 1 and value == 31:
+                raise NetworkLimitException()
+        elif rfc_current_range == 0:
+            # Class C network, limits are 192.168.0.0 - 192.168.255.255
+            if idx == 2 and value == 255:
+                raise NetworkLimitException()
+
+    @staticmethod
+    def in_rfc_range_reverse(rfc_current_range, idx, value):
+        if rfc_current_range == 2:
+            # Class A network, limits are 10.0.0.0 - 10.255.255.255
+            if idx == 1 and value == 0:
+                raise NetworkLimitException()
+        elif rfc_current_range == 1:
+            # Class B network, limits are 172.16.0.0 - 172.31.255.255
+            if idx == 1 and value == 16:
+                raise NetworkLimitException()
+        elif rfc_current_range == 0:
+            # Class C network, limits are 192.168.0.0 - 192.168.255.255
+            if idx == 2 and value == 0:
+                raise NetworkLimitException()
 
     #
     # Others

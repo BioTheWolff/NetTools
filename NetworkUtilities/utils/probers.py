@@ -1,5 +1,6 @@
 from NetworkUtilities.core.network_basic import NetworkBasic
 import netifaces
+from NetworkUtilities.core.utils import Utils
 
 
 class NetworkProber(NetworkBasic):
@@ -26,8 +27,7 @@ class NetworkProber(NetworkBasic):
 
     def determine_range_reverse(self, start_ip, machine_bits):
         def _check(idx, content):
-            if idx == 0 and content[idx] == 0:
-                raise Exception(self.error_dict[self.lang]['network_limit'])
+            Utils.in_rfc_range_reverse(self.rfc_current_range, idx, content[idx])
 
             if content[idx] == 0:
                 content[idx] = 255

@@ -1,4 +1,6 @@
 from NetworkUtilities.core.network_basic import NetworkBasic
+from NetworkUtilities.core.errors import MaskTooSmallException
+from NetworkUtilities.core.utils import Utils
 
 
 class SubnetworkBuilder(NetworkBasic):
@@ -55,8 +57,7 @@ class SubnetworkBuilder(NetworkBasic):
 
     def _find_start_of_next_subnet_range(self, end):
         def _check(idx, content):
-            if idx == 0 and content[idx] == '255':
-                raise Exception(self.error_dict['network_limit'])
+            Utils.in_rfc_range(self.rfc_current_range, idx, content[idx])
 
             if content[idx] == '255':
                 content[idx] = '0'
@@ -97,7 +98,7 @@ class SubnetworkBuilder(NetworkBasic):
             power = 1
             while total > 2 ** power:
                 power += 1
-            raise Exception(self.error_dict['mask_too_small'].format(self.mask_length, 32 - power))
+            raise MaskTooSmallException(self.mask_length, 32 - power)
 
     def build_subnets(self, returning=None, display=None, advanced=None):
 

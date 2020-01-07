@@ -1,12 +1,11 @@
-from NetworkUtilities.core.errors import MaskLengthOffBoundsException, MaskByteNumberOffLimitsException, \
-    IPBytesLengthException, MaskBytesLengthException, IPByteNumberOffLimitsException, RFCRulesWrongCoupleException, \
+from NetworkUtilities.core.errors import MaskLengthOffBoundsException, \
+    RFCRulesWrongCoupleException, \
     RFCRulesIPWrongRangeException, MaskNotProvided, IncorrectMaskException, IPOffNetworkRangeException, \
-    NetworkLimitException
+    BytesLengthException, ByteNumberOffLimitsException
 from NetworkUtilities.core.utils import Utils
 
 
 class NetworkBasic:
-    lang = 'en'
     ip, mask, address_type = None, None, None
     mask_length, addresses = 0, 0
     rfc_current_range, rfc_masks = None, [16, 12, 8]
@@ -30,24 +29,6 @@ class NetworkBasic:
         'sub_addr': "{} - {} ({} addresses)",
         'sub_addr_advanced': "{} - {} ({} available addresses, {} requested)",
         'net_usage': "NetworkBasic usage:"
-    }
-    error_dict = {
-        'ip_bytes_length': "IP must be 4 bytes long, found {} byte(s)",
-        'ip_number_off_limits': "IP bytes must be between 0 and 255. Found {} at byte {}",
-        'ip_off_network_range': "IP address not in network range.",
-
-        'mask_bytes_length': "Mask must be 4 bytes long, found {} bytes",
-        'mask_number_off_limits': "Mask bytes must be between 0 and 255. Found {} at byte {}",
-        'mask_length_off_bounds': "Provided mask length ({}) out of bounds [0-32]",
-        'mask_incorrect': "Incorrect mask. Allowed values: [0,128,192,224,240,248,242,254,255]",
-        'mask_too_small': "Given mask length ({}) cannot handle all the addresses of the subnetworks. "
-                          "Advised length : {}",
-
-        'rfc_ip_wrong_range': "IP must be either 192.168.x.x , 172.16.x.x or 10.0.x.x; found {}.{}.x.x",
-        'rfc_couple': "According to RFC standards, given couple must be {}.{}.x.x/>={}, found mask length {}",
-        'rfc_ips_diff_network': "Starting IP ({}) and IP ({}) are not on the same local network",
-
-        'network_limit': "Limit 255.255.255.255 reached while trying to determine (sub)network range."
     }
 
     #
@@ -103,25 +84,25 @@ class NetworkBasic:
 
         temp = self.ip.split('.')
         if len(temp) != 4:
-            raise IPBytesLengthException(self.lang, len(temp))
+            raise BytesLengthException('IP', len(temp))
         for e in temp:
             if not (0 <= int(e) <= 255):
-                raise IPByteNumberOffLimitsException(self.lang, e, temp.index(e))
+                raise ByteNumberOffLimitsException('IP', e, temp.index(e))
 
         try:
             temp = self.mask.split('.')
             if len(temp) == 1:
                 raise AttributeError()
             if len(temp) != 4:
-                raise MaskBytesLengthException(self.lang, len(temp))
+                raise BytesLengthException('mask', len(temp))
             for e in temp:
                 if not (0 <= int(e) <= 255):
-                    raise MaskByteNumberOffLimitsException(self.lang, e, temp.index(e))
+                    raise ByteNumberOffLimitsException('Mask', e, temp.index(e))
         except (AttributeError, ValueError):
             if 0 <= int(self.mask) <= 32:
                 return
             else:
-                raise MaskLengthOffBoundsException(self.lang, self.mask)
+                raise MaskLengthOffBoundsException(self.mask)
 
     def calculate_mask(self):
         """
@@ -154,12 +135,13 @@ class NetworkBasic:
                     # contains only a 0, else we raise an IncorrectMaskException
                     if concerned < 255:
                         for i in range(1, 4 - byte):
-                            if temp[byte + i] != '0':
-                                raise IncorrectMaskException(self.lang)
+                            b = temp[byte + i]
+                            if b != '0':
+                                raise IncorrectMaskException(is_out_allowed=False, value=b, extra=byte + i)
 
                     length += self._switch_length(concerned, index=True)
                 else:
-                    raise IncorrectMaskException(self.lang)
+                    raise IncorrectMaskException(is_out_allowed=True, value=concerned)
 
             # Stock the length
             self.mask_length = length
@@ -195,7 +177,7 @@ class NetworkBasic:
                     self.rfc_current_range = I
 
             if ip_test is False:
-                raise RFCRulesIPWrongRangeException(self.lang, ip[0], ip[1])
+                raise RFCRulesIPWrongRangeException(ip[0], ip[1])
 
         ip = self.ip.split('.')
         mask = self.mask_length
@@ -208,7 +190,7 @@ class NetworkBasic:
             allowed = self.rfc_allowed_ranges[i][0]
             allowed_mask = self.rfc_masks[i]
             if (int(ip[0]) == allowed) and (mask < allowed_mask):
-                raise RFCRulesWrongCoupleException(self.lang, ip[0], ip[1], allowed_mask, mask)
+                raise RFCRulesWrongCoupleException(ip[0], ip[1], allowed_mask, mask)
 
     #
     # Dispatchers
@@ -277,19 +259,7 @@ class NetworkBasic:
         machine_bits = 32 - self.mask_length if machine_bits is None else machine_bits
 
         def _check(idx, content):
-            # With these conditions, we prevent networks from going out of the RFC local ranges
-            if self.rfc_current_range == 2:
-                # Class A network, limits are 10.0.0.0 - 10.255.255.255
-                if idx == 1 and content[idx] == 255:
-                    raise NetworkLimitException(self.lang)
-            elif self.rfc_current_range == 1:
-                # Class B network, limits are 172.16.0.0 - 172.31.255.255
-                if idx == 1 and content[idx] == 31:
-                    raise NetworkLimitException(self.lang)
-            elif self.rfc_current_range == 0:
-                # Class C network, limits are 192.168.0.0 - 192.168.255.255
-                if idx == 2 and content[idx] == 255:
-                    raise NetworkLimitException(self.lang)
+            Utils.in_rfc_range(self.rfc_current_range, idx, content[idx])
 
             if content[idx] == 255:
                 content[idx] = 0
@@ -351,7 +321,7 @@ class NetworkBasic:
             self.determine_network_range()
 
         if not Utils.ip_in_range(self.network_range, machine_ip):
-            raise IPOffNetworkRangeException(self.lang)
+            raise IPOffNetworkRangeException(machine_ip)
 
         if self.network_range['start'] == machine_ip:
             self.address_type = 0
