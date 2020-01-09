@@ -34,7 +34,7 @@ class NetworkBasic:
     #
     # DUNDERS
     #
-    def __init__(self, ip, mask=None):
+    def __init__(self, ip: str, mask=None) -> None:
         """
         The mask is an optional parameter in case the CIDR is passed into the ip parameter.
         The CIDR, as in its definition, can only be expressed with the mask length:
@@ -69,7 +69,7 @@ class NetworkBasic:
     #
     # __init__ Tests
     #
-    def _verify_provided_types(self):
+    def _verify_provided_types(self) -> None:
         """
         Verifies the provided types (ip, and mask). If a CIDR was passed, the __init__ took care of the spliting into
         respective ip and mask.
@@ -104,7 +104,7 @@ class NetworkBasic:
             else:
                 raise MaskLengthOffBoundsException(self.mask)
 
-    def calculate_mask(self):
+    def calculate_mask(self) -> None:
         """
         Calculates the mask from the instance var self.mask
 
@@ -154,7 +154,7 @@ class NetworkBasic:
         finally:
             self.addresses = 2 ** (32 - self.mask_length) - 2
 
-    def _verify_rfc_rules(self):
+    def _verify_rfc_rules(self) -> None:
         """
         Verifies that both the IP and the mask match RFC standards
 
@@ -196,13 +196,13 @@ class NetworkBasic:
     # Dispatchers
     #   Functions that recieve a complex part excluded from the main function they are called from
     #
-    def _switch_length(self, mask_length, index=False):
+    def _switch_length(self, mask_length: int, index=False) -> int:
         if index:
             return self.mask_allowed_bytes.index(mask_length)
         else:
             return self.mask_allowed_bytes[mask_length]
 
-    def mask_length_to_literal(self, mask_length):
+    def mask_length_to_literal(self, mask_length: int) -> str:
         result = ''
         if mask_length <= 8:
             result = "{}.0.0.0".format(self._switch_length(mask_length))
@@ -220,7 +220,7 @@ class NetworkBasic:
     #
     # Template for child classes
     #
-    def _display(self, machine_ip=None, is_prober=False):
+    def _display(self, machine_ip: str = None, is_prober=False):
         print(self.lang_dict['network'])
         print(self.lang_dict['cidr'].format(self.ip, self.mask_length))
         if is_prober:
@@ -244,7 +244,7 @@ class NetworkBasic:
     #
     # Main functions
     #
-    def determine_network_range(self, start_ip=None, machine_bits=None, addresses_list=None):
+    def determine_network_range(self, start_ip: str = None, machine_bits: int = None, addresses_list: bool = None):
         """
 
         :param start_ip: The ip we have to start the range from. Used only by the SubnetworkBuilder class
@@ -283,21 +283,21 @@ class NetworkBasic:
         else:
             if addresses_list:
                 liste.append(start)
-            ip = start.split('.')
+            temp_ip = start.split('.')
             addresses = 2 ** machine_bits
-            for e in ip:
-                ip[ip.index(e)] = int(e)
+            for e in temp_ip:
+                temp_ip[temp_ip.index(e)] = int(e)
 
             # we take 1 from addresses because the starting ip is already one
             for _ in range(addresses - 1):
-                ip = _check(3, ip)
+                temp_ip = _check(3, temp_ip)
                 if addresses_list:
-                    liste.append(".".join([str(i) for i in ip]))
+                    liste.append(".".join([str(i) for i in temp_ip]))
 
-            for e in ip:
-                ip[ip.index(e)] = str(e)
+            for e in temp_ip:
+                temp_ip[temp_ip.index(e)] = str(e)
 
-            result = {'start': start, 'end': '.'.join(ip)}
+            result = {'start': start, 'end': '.'.join(temp_ip)}
 
         self.network_range = result
         if addresses_list:
@@ -306,7 +306,7 @@ class NetworkBasic:
         else:
             return result
 
-    def determine_type(self, machine_ip):
+    def determine_type(self, machine_ip: str) -> int:
         """
         Determines the type of the given ip.
 
@@ -335,7 +335,7 @@ class NetworkBasic:
 
 class NetworkBasicDisplayer(NetworkBasic):
 
-    def display_range(self, display=False):
+    def display_range(self, display=False) -> None:
         self.determine_network_range()
 
         if display is True:
@@ -343,7 +343,7 @@ class NetworkBasicDisplayer(NetworkBasic):
         else:
             print(self.network_range)
 
-    def display_type(self, machine_ip, display=False):
+    def display_type(self, machine_ip: str, display=False) -> None:
         self.determine_type(machine_ip)
 
         if display is True:
