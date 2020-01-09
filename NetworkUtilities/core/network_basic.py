@@ -3,6 +3,7 @@ from NetworkUtilities.core.errors import MaskLengthOffBoundsException, \
     RFCRulesIPWrongRangeException, MaskNotProvided, IncorrectMaskException, IPOffNetworkRangeException, \
     BytesLengthException, ByteNumberOffLimitsException
 from NetworkUtilities.core.utils import Utils
+from typing import Union
 
 
 class NetworkBasic:
@@ -34,7 +35,7 @@ class NetworkBasic:
     #
     # DUNDERS
     #
-    def __init__(self, ip: str, mask=None) -> None:
+    def __init__(self, ip: str, mask: Union[str, int] = None) -> None:
         """
         The mask is an optional parameter in case the CIDR is passed into the ip parameter.
         The CIDR, as in its definition, can only be expressed with the mask length:

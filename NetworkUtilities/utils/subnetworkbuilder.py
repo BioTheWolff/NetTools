@@ -1,12 +1,13 @@
 from NetworkUtilities.core.network_basic import NetworkBasic
 from NetworkUtilities.core.errors import MaskTooSmallException
 from NetworkUtilities.core.utils import Utils
+from typing import Union, List, Optional
 
 
 class SubnetworkBuilder(NetworkBasic):
     subnets_sizes, subnets, submasks_machine_bits = [], [], []
 
-    def __display_subnets(self, advanced):
+    def __display_subnets(self, advanced=False) -> None:
 
         # graph
         occupied = 0
@@ -55,7 +56,7 @@ class SubnetworkBuilder(NetworkBasic):
         print(self.lang_dict['net_usage'])
         print(graph)
 
-    def _find_start_of_next_subnet_range(self, end):
+    def _find_start_of_next_subnet_range(self, end: str) -> str:
         def _check(idx, content):
             Utils.in_rfc_range(self.rfc_current_range, idx, content[idx])
 
@@ -69,7 +70,7 @@ class SubnetworkBuilder(NetworkBasic):
         data = end.split('.')
         return _check(3, data)
 
-    def __determine_required_submasks_sizes(self):
+    def __determine_required_submasks_sizes(self) -> None:
 
         submasks = []
 
@@ -81,7 +82,7 @@ class SubnetworkBuilder(NetworkBasic):
 
         self.submasks_machine_bits = submasks
 
-    def __init__(self, starting_ip, mask, subnets_sizes):
+    def __init__(self, starting_ip: str, mask: Union[str, int], subnets_sizes: List[int]) -> None:
         super().__init__(starting_ip, mask)
         self.subnets_sizes = sorted(subnets_sizes, reverse=True)
 
@@ -100,7 +101,7 @@ class SubnetworkBuilder(NetworkBasic):
                 power += 1
             raise MaskTooSmallException(self.mask_length, 32 - power)
 
-    def build_subnets(self, returning=None, display=None, advanced=None):
+    def build_subnets(self, display: Optional[bool] = None, advanced: Optional[bool] = None):
 
         start_ip = self.network_range['start']
 
@@ -115,5 +116,4 @@ class SubnetworkBuilder(NetworkBasic):
         elif display is False:
             print(self.subnets)
 
-        if returning is True:
-            return self.subnets
+        return self.subnets
