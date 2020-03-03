@@ -1,6 +1,5 @@
 import argparse
 from NetworkUtilities.core.network_basic import NetworkBasicDisplayer
-from NetworkUtilities.utils.probers import NetworkProbingDisplayer
 from NetworkUtilities.utils.subnetworkbuilder import SubnetworkBuilder
 
 

@@ -1,6 +1,7 @@
 # Idea & Python
 .idea/
 __pycache__/
+stock/
 
 # Version file
 NetworkUtilities/version.py

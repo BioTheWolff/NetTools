@@ -221,14 +221,10 @@ class NetworkBasic:
     #
     # Template for child classes
     #
-    def _display(self, machine_ip: str = None, is_prober=False):
+    def _display(self, machine_ip: str = None):
         print(self.lang_dict['network'])
         print(self.lang_dict['cidr'].format(self.ip, self.mask_length))
-        if is_prober:
-            print("Estimated range from probing : {} - {}".format(self.network_range['start'],
-                                                                  self.network_range['end']))
-        else:
-            print("{} - {}".format(self.network_range['start'], self.network_range['end']))
+        print("{} - {}".format(self.network_range['start'], self.network_range['end']))
         print(self.lang_dict['addr_avail'].format(self.addresses))
 
         if self.address_type is not None and machine_ip:
@@ -256,6 +252,7 @@ class NetworkBasic:
             liste: the list of addresses in the range
         """
 
+        result = None
         start = self.ip if start_ip is None else start_ip
         machine_bits = 32 - self.mask_length if machine_bits is None else machine_bits
 
@@ -278,8 +275,6 @@ class NetworkBasic:
                 result = {'start': "172.16.0.0", 'end': "172.31.255.255"}
             elif self.rfc_current_range == 2:
                 result = {'start': "10.0.0.0", 'end': "10.255.255.255"}
-            else:
-                raise Exception("Something wrong happened when nothing should. Try contacting the author to solve this")
 
         else:
             if addresses_list:
@@ -299,6 +294,9 @@ class NetworkBasic:
                 temp_ip[temp_ip.index(e)] = str(e)
 
             result = {'start': start, 'end': '.'.join(temp_ip)}
+
+        if not result:
+            return
 
         self.network_range = result
         if addresses_list:
@@ -356,8 +354,6 @@ class NetworkBasicDisplayer(NetworkBasic):
                 machine_type = self.lang_dict['addr_types']['mac']
             elif self.address_type == 2:
                 machine_type = self.lang_dict['addr_types']['bct']
-            else:
-                raise Exception("Given address type other than expected address types")
 
             temp = self.network_range
             temp['address_type'] = machine_type

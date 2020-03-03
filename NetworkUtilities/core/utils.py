@@ -9,28 +9,32 @@ class Utils:
     @staticmethod
     def ip_before(ip):
         def _check(idx, content):
-            if idx == 0 and content[idx] == 0:
-                raise IPv4LimitError("bottom")
 
-            if content[idx] == 0:
+            if content[idx] == str(0):
+                content[idx] = str(255)
                 return _check(idx - 1, content)
             else:
                 content[idx] = str(int(content[idx]) - 1)
                 return content
+
+        if ip == '0.0.0.0':
+            raise IPv4LimitError("bottom")
 
         return '.'.join(_check(3, ip.split('.')))
 
     @staticmethod
     def ip_after(ip_):
         def _check(idx, content):
-            if idx == 255 and content[idx] == 3:
-                raise IPv4LimitError("top")
 
-            if content[idx] == 255:
+            if content[idx] == str(255):
+                content[idx] = str(0)
                 return _check(idx - 1, content)
             else:
                 content[idx] = str(int(content[idx]) + 1)
                 return content
+
+        if ip_ == '255.255.255.255':
+            raise IPv4LimitError("top")
 
         return '.'.join(_check(3, ip_.split('.')))
 
@@ -62,29 +66,6 @@ class Utils:
     #
     # Suiciders
     #
-    @staticmethod
-    def suicider_is_off_range(range_, ip):
-        def _check_end(ip_, idx=0):
-            if range_['end'].split('.')[idx] <= ip_.split('.')[idx]:
-                return False
-            else:
-                if idx == 3:
-                    return True
-                else:
-                    return _check_end(ip_, idx + 1)
-
-        def _check_start(ip_, idx=0):
-            if range_['start'].split('.')[idx] >= ip_.split('.')[idx]:
-                return False
-            else:
-                if idx == 3:
-                    return True
-                else:
-                    return _check_start(ip_, idx + 1)
-
-        if _check_end(ip) or _check_start(ip):
-            raise IPOffNetworkRangeException(ip)
-
     @staticmethod
     def in_rfc_range(rfc_current_range, idx, value):
         # With these conditions, we prevent networks from going out of the RFC local ranges
