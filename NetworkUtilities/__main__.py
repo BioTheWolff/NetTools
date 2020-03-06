@@ -48,10 +48,6 @@ def main():
         net = SubnetworkBuilder(args.ip, args.mask, args.subnets_sizes)
         net.build_subnets(display=args.raw, advanced=args.advanced)
 
-    elif args.subparser == "probe":
-        net = NetworkProbingDisplayer()
-        net.display_range(display=args.raw)
-
 
 if __name__ == '__main__':
     main()

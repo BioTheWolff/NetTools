@@ -5,6 +5,7 @@ from typing import Union, List, Optional
 
 
 class SubnetworkBuilder(NetworkBasic):
+    total_network_range = {}
     subnets_sizes, subnets, submasks_machine_bits = [], [], []
 
     def __display_subnets(self, advanced=False) -> None:
@@ -34,7 +35,7 @@ class SubnetworkBuilder(NetworkBasic):
             print(self.lang_dict['cidr_adv'].format(self.ip, self.mask_length))
         else:
             print(self.lang_dict['cidr'].format(self.ip, self.mask_length))
-        print("{} - {}".format(self.network_range['start'], self.network_range['end']))
+        print("{} - {}".format(self.total_network_range['start'], self.total_network_range['end']))
         if advanced is True:
             print(self.lang_dict['addr_avail_advanced'].format(occupied, self.addresses))
         else:
@@ -87,7 +88,7 @@ class SubnetworkBuilder(NetworkBasic):
         self.subnets_sizes = sorted(subnets_sizes, reverse=True)
 
         # first, let's check if the provided mask can handle all the addresses requested
-        self.determine_network_range()
+        self.total_network_range = self.determine_network_range()
         self.__determine_required_submasks_sizes()
 
         total = 0
