@@ -8,7 +8,7 @@ class NetworkBasicTests(unittest.TestCase):
 
     def _test_range(self, ip, mask=None):
         r = nb.NetworkBasic(ip, mask).determine_network_range()
-        self.assertEqual({'start': '192.168.1.0', 'end': '192.168.1.255'}, r)
+        self.assertEqual({'start': [192, 168, 1, 0], 'end': [192, 168, 1, 255]}, r)
 
     def test_input_types(self):
 
@@ -69,35 +69,7 @@ class NetworkBasicTests(unittest.TestCase):
     #
     # RFC
     #
-    def test_rfc_saved_types(self):
-
-        # Class C network
-        c = nb.NetworkBasic('192.168.0.0', 16).determine_network_range()
-        self.assertEqual({'start': '192.168.0.0', 'end': '192.168.255.255'}, c)
-
-        # Class B network
-        b = nb.NetworkBasic('172.16.0.0', 12).determine_network_range()
-        self.assertEqual({'start': '172.16.0.0', 'end': '172.31.255.255'}, b)
-
-        # Class A network
-        a = nb.NetworkBasic('10.0.0.0', 8).determine_network_range()
-        self.assertEqual({'start': '10.0.0.0', 'end': '10.255.255.255'}, a)
-
-    def test_rfc_going_out_allowed_range(self):
-
-        # Class C going above 192.168.255.255 (would fall into 192.169.x.x which is public)
-        self.assertRaises(er.NetworkLimitException, lambda: nb.NetworkBasic('192.168.255.128', 24)
-                          .determine_network_range())
-
-        # Class B going above 172.31.255.255 (would fall into 172.32.x.x which is public)
-        self.assertRaises(er.NetworkLimitException, lambda: nb.NetworkBasic('172.31.255.128', 24)
-                          .determine_network_range())
-
-        # Class B going above 10.255.255.255 (would fall into 11.x.x.x which is public)
-        self.assertRaises(er.NetworkLimitException, lambda: nb.NetworkBasic('10.255.255.128', 24)
-                          .determine_network_range())
-
-    def test_nfc_standards(self):
+    def test_rfc_standards(self):
         # Wrong range
         self.assertRaises(er.RFCRulesIPWrongRangeException, lambda: nb.NetworkBasic('100.168.1.0', 24))
 
@@ -142,24 +114,15 @@ class NetworkBasicTests(unittest.TestCase):
         self.assertEqual(254, a)
 
     def test_machine_type(self):
-        inst = nb.NetworkBasic('192.168.1.0', 24)
 
         # Network address
-        self.assertEqual(inst.determine_type('192.168.1.0'), 0)
+        self.assertEqual(nb.NetworkBasic('192.168.1.0', 24).determine_type(), 0)
 
         # Computer address
-        self.assertEqual(inst.determine_type('192.168.1.4'), 1)
+        self.assertEqual(nb.NetworkBasic('192.168.1.4', 24).determine_type(), 1)
 
         # Broadcast address
-        self.assertEqual(inst.determine_type('192.168.1.255'), 2)
-
-        # Errors: out of range
-        err_inst = nb.NetworkBasic('192.168.1.128', 29)
-        # before range
-        self.assertRaises(er.IPOffNetworkRangeException, lambda: err_inst.determine_type('192.168.1.127'))
-
-        # after range
-        self.assertRaises(er.IPOffNetworkRangeException, lambda: err_inst.determine_type('192.168.1.127'))
+        self.assertEqual(nb.NetworkBasic('192.168.1.255', 24).determine_type(), 2)
 
 
 class NetworkBasicDisplays(unittest.TestCase):
@@ -276,23 +239,11 @@ class NetworkBasicForceCrash(unittest.TestCase):
     @mock.patch('builtins.print')
     def test_unexpected_address_type(self, _):
 
-        inst = nb.NetworkBasic('192.168.1.0', 24)
-        inst.determine_type('192.168.1.5')
+        inst = nb.NetworkBasic('192.168.1.5', 24)
+        inst.determine_type()
 
         # Force change type
         inst.address_type = 3
 
         # Force display call and fake parameters
-        self.assertRaises(Exception, lambda: inst._display(machine_ip='192.168.1.5'))
-
-    def test_wrong_rfc_current_range(self):
-
-        # Create the range that won't be calculated, but is already known by the program because it is the 192.168/16
-        # specified by RFC. Thus, it will be returned without calculus
-        inst = nb.NetworkBasic('192.168.0.0', 16)
-
-        # Force current range
-        inst.rfc_current_range = 3
-
-        # Try determining network range with wrong variable value
-        self.assertRaises(Exception, lambda: inst.determine_network_range())
+        self.assertRaises(Exception, lambda: inst._display())

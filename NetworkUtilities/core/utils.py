@@ -1,4 +1,5 @@
-from NetworkUtilities.core.errors import IPv4LimitError, IPOffNetworkRangeException, NetworkLimitException
+from NetworkUtilities.core.errors import IPv4LimitError, NetworkLimitException
+from typing import List
 
 
 class Utils:
@@ -7,36 +8,36 @@ class Utils:
     # Getters
     #
     @staticmethod
-    def ip_before(ip):
+    def ip_before(ip: List[int]):
         def _check(idx, content):
 
-            if content[idx] == str(0):
-                content[idx] = str(255)
+            if content[idx] == 0:
+                content[idx] = 255
                 return _check(idx - 1, content)
             else:
-                content[idx] = str(int(content[idx]) - 1)
+                content[idx] = content[idx] - 1
                 return content
 
-        if ip == '0.0.0.0':
+        if ip == [0, 0, 0, 0]:
             raise IPv4LimitError("bottom")
 
-        return '.'.join(_check(3, ip.split('.')))
+        return _check(3, ip)
 
     @staticmethod
-    def ip_after(ip_):
+    def ip_after(ip: List[int]):
         def _check(idx, content):
 
-            if content[idx] == str(255):
-                content[idx] = str(0)
+            if content[idx] == 255:
+                content[idx] = 0
                 return _check(idx - 1, content)
             else:
-                content[idx] = str(int(content[idx]) + 1)
+                content[idx] = content[idx] + 1
                 return content
 
-        if ip_ == '255.255.255.255':
+        if ip == [255, 255, 255, 255]:
             raise IPv4LimitError("top")
 
-        return '.'.join(_check(3, ip_.split('.')))
+        return _check(3, ip)
 
     #
     # Checkers
@@ -101,5 +102,5 @@ class Utils:
     # Others
     #
     @staticmethod
-    def __dec_to_bin(x):
-        return int(bin(x)[:2])
+    def dec_to_bin(x):
+        return int(bin(x)[2:])

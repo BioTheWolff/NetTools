@@ -3,11 +3,13 @@ from NetworkUtilities.core.errors import MaskLengthOffBoundsException, \
     RFCRulesIPWrongRangeException, MaskNotProvided, IncorrectMaskException, IPOffNetworkRangeException, \
     BytesLengthException, ByteNumberOffLimitsException
 from NetworkUtilities.core.utils import Utils
-from typing import Union
+from typing import Union, List, Iterable
 
 
 class NetworkBasic:
-    ip, mask, address_type = None, None, None
+    ip: List[int] = None
+    mask: Union[List[int], str] = None
+    address_type = None
     mask_length, addresses = 0, 0
     rfc_current_range, rfc_masks = None, [16, 12, 8]
     rfc_allowed_ranges = [[192, [168, 168]], [172, [16, 31]], [10, [0, 255]]]
@@ -44,7 +46,7 @@ class NetworkBasic:
 
         CIDR informations can be found here: https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing
 
-        :param ip: The ip that starts the range
+        :param ip: The ip in the range
         :param mask: The mask literal or length
         :raises:
             MaskNotProvided: If the mask parameter is None and the ip parameter is not a valid CIDR
@@ -55,17 +57,19 @@ class NetworkBasic:
         if mask is None:
             try:
                 ip, mask = ip.split('/')
-                self.ip = ip
+                self.ip = [int(i) for i in ip.split('.')]
                 self.mask = mask
             except ValueError:
                 raise MaskNotProvided(ip)
         else:
-            self.ip = ip
+            self.ip = [int(i) for i in ip.split('.')]
             self.mask = mask
 
         self._verify_provided_types()
         self.calculate_mask()
         self._verify_rfc_rules()
+
+        self.determine_network_range()
 
     #
     # __init__ Tests
@@ -83,7 +87,7 @@ class NetworkBasic:
             MaskLengthOffBoundsException: If the mask length is not between 0 and 32
         """
 
-        temp = self.ip.split('.')
+        temp = self.ip
         if len(temp) != 4:
             raise BytesLengthException('IP', len(temp))
         for e in temp:
@@ -146,11 +150,12 @@ class NetworkBasic:
 
             # Stock the length
             self.mask_length = length
+            self.mask = [int(i) for i in temp]
 
         except AttributeError:
             # The mask is given by its length
             self.mask_length = int(self.mask)
-            self.mask = self.mask_length_to_literal(self.mask_length)
+            self.mask = [int(i) for i in self.mask_length_to_literal(self.mask_length).split('.')]
 
         finally:
             self.addresses = 2 ** (32 - self.mask_length) - 2
@@ -180,7 +185,7 @@ class NetworkBasic:
             if ip_test is False:
                 raise RFCRulesIPWrongRangeException(ip[0], ip[1])
 
-        ip = self.ip.split('.')
+        ip = self.ip
         mask = self.mask_length
 
         # We check that ip respects RFC standards
@@ -221,110 +226,64 @@ class NetworkBasic:
     #
     # Template for child classes
     #
-    def _display(self, machine_ip: str = None):
+    def _display(self):
         print(self.lang_dict['network'])
         print(self.lang_dict['cidr'].format(self.ip, self.mask_length))
         print("{} - {}".format(self.network_range['start'], self.network_range['end']))
         print(self.lang_dict['addr_avail'].format(self.addresses))
+        print('')
 
-        if self.address_type is not None and machine_ip:
-            print('')
+        self.determine_type()
+        if self.address_type in [0, 1, 2]:
+            types = ['net', 'mac', 'bct']
+            machine_type = self.lang_dict['addr_types'][types[self.address_type]]
+        else:
+            raise Exception("Given address type other than expected address types")
 
-            if self.address_type in [0, 1, 2]:
-                types = ['net', 'mac', 'bct']
-                machine_type = self.lang_dict['addr_types'][types[self.address_type]]
-            else:
-                raise Exception("Given address type other than expected address types")
-
-            print(self.lang_dict['addr_type'].format(machine_ip, machine_type))
+        print(self.lang_dict['addr_type'].format(self.ip, machine_type))
 
     #
     # Main functions
     #
-    def determine_network_range(self, start_ip: str = None, machine_bits: int = None, addresses_list: bool = None):
-        """
+    def determine_network_range(self, ip: List[int] = None, machine_bits: int = None):
 
-        :param start_ip: The ip we have to start the range from. Used only by the SubnetworkBuilder class
-        :param machine_bits: Used to pass machine bits instead of network bits. Used by SubnetworkBuilder class
-        :param addresses_list: If one wants the list of each ip constituting the range
-        :return:
-            result: the determined range
-            liste: the list of addresses in the range
-        """
+        ip = ip if ip else self.ip
+        mask = [int(i) for i in
+                self.mask_length_to_literal(32 - machine_bits).split('.')
+                ] if machine_bits else self.mask
 
-        result = None
-        start = self.ip if start_ip is None else start_ip
-        machine_bits = 32 - self.mask_length if machine_bits is None else machine_bits
+        # Network address
+        net = []
+        for i in range(4):
+            net.append(ip[i] & mask[i])
 
-        def _check(idx, content):
-            Utils.in_rfc_range(self.rfc_current_range, idx, content[idx])
+        # Broadcast address
+        bct = []
+        for i in range(4):
+            bct.append(ip[i] | (255 ^ mask[i]))
 
-            if content[idx] == 255:
-                content[idx] = 0
-                return _check(idx - 1, content)
-            else:
-                content[idx] = content[idx] + 1
-                return content
+        result = {"start": net, "end": bct}
 
-        liste = []
+        if ip is None and mask is None:
+            self.network_range = result
 
-        if start_ip is None and (self.mask_length == self.rfc_masks[self.rfc_current_range]) and addresses_list is None:
-            if self.rfc_current_range == 0:
-                result = {'start': "192.168.0.0", 'end': "192.168.255.255"}
-            elif self.rfc_current_range == 1:
-                result = {'start': "172.16.0.0", 'end': "172.31.255.255"}
-            elif self.rfc_current_range == 2:
-                result = {'start': "10.0.0.0", 'end': "10.255.255.255"}
+        return result
 
-        else:
-            if addresses_list:
-                liste.append(start)
-            temp_ip = start.split('.')
-            addresses = 2 ** machine_bits
-            for e in temp_ip:
-                temp_ip[temp_ip.index(e)] = int(e)
-
-            # we take 1 from addresses because the starting ip is already one
-            for _ in range(addresses - 1):
-                temp_ip = _check(3, temp_ip)
-                if addresses_list:
-                    liste.append(".".join([str(i) for i in temp_ip]))
-
-            for e in temp_ip:
-                temp_ip[temp_ip.index(e)] = str(e)
-
-            result = {'start': start, 'end': '.'.join(temp_ip)}
-
-        if not result:
-            return
-
-        self.network_range = result
-        if addresses_list:
-            del liste[-1]
-            return result, liste
-        else:
-            return result
-
-    def determine_type(self, machine_ip: str) -> int:
+    def determine_type(self) -> int:
         """
         Determines the type of the given ip.
 
-        :param machine_ip: The IP we want to have the type of.
         :return:
             address_type: the address type of the machine
         :raises:
             IPOffNetworkRangeException: If the given IP is not in the network range
         """
 
-        if not self.network_range:
-            self.determine_network_range()
+        res = self.determine_network_range()
 
-        if not Utils.ip_in_range(self.network_range, machine_ip):
-            raise IPOffNetworkRangeException(machine_ip)
-
-        if self.network_range['start'] == machine_ip:
+        if res['start'] == self.ip:
             self.address_type = 0
-        elif self.network_range['end'] == machine_ip:
+        elif res['end'] == self.ip:
             self.address_type = 2
         else:
             self.address_type = 1

@@ -57,20 +57,6 @@ class SubnetworkBuilder(NetworkBasic):
         print(self.lang_dict['net_usage'])
         print(graph)
 
-    def _find_start_of_next_subnet_range(self, end: str) -> str:
-        def _check(idx, content):
-            Utils.in_rfc_range(self.rfc_current_range, idx, content[idx])
-
-            if content[idx] == '255':
-                content[idx] = '0'
-                return _check(idx - 1, content)
-            else:
-                content[idx] = str(int(content[idx]) + 1)
-                return '.'.join(content)
-
-        data = end.split('.')
-        return _check(3, data)
-
     def __determine_required_submasks_sizes(self) -> None:
 
         submasks = []
@@ -78,7 +64,7 @@ class SubnetworkBuilder(NetworkBasic):
         for i in range(len(self.subnets_sizes)):
             power = 1
             while 2 ** power - 2 < self.subnets_sizes[i]:
-                power = power + 1
+                power += 1
             submasks.append(power)
 
         self.submasks_machine_bits = submasks
@@ -103,14 +89,13 @@ class SubnetworkBuilder(NetworkBasic):
             raise MaskTooSmallException(self.mask_length, 32 - power)
 
     def build_subnets(self, display: Optional[bool] = None, advanced: Optional[bool] = None):
-
         start_ip = self.network_range['start']
 
         for i in range(len(self.subnets_sizes)):
             machine_bits = self.submasks_machine_bits[i]
-            result = self.determine_network_range(start_ip=start_ip, machine_bits=machine_bits)
+            result = self.determine_network_range(ip=start_ip, machine_bits=machine_bits)
             self.subnets.append(result)
-            start_ip = self._find_start_of_next_subnet_range(result['end'])
+            start_ip = Utils.ip_after(result['end'])
 
         if display is True:
             self.__display_subnets(advanced)
