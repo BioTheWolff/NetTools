@@ -104,5 +104,13 @@ class Utils:
     # Others
     #
     @staticmethod
+    def to_literal(x):
+        return ".".join([str(i) for i in x])
+
+    @staticmethod
+    def netr_to_literal(x):
+        return {"start": Utils.to_literal(x["start"]), "end": Utils.to_literal(x['end'])}
+
+    @staticmethod
     def dec_to_bin(x):
         return int(bin(x)[2:])

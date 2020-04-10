@@ -135,20 +135,6 @@ class NetworkBasicDisplays(unittest.TestCase):
         nb.NetworkBasicDisplayer('192.168.1.0', 24).display_range()
         self.assertEqual([mock.call({'start': '192.168.1.0', 'end': '192.168.1.255'})], mocked_print.mock_calls)
 
-    @mock.patch('builtins.print')
-    def test_fancy_display_range(self, mocked_print):
-        inst = nb.NetworkBasicDisplayer('192.168.1.0', 24)
-        inst.display_range(display=True)
-
-        expected_list = [
-            mock.call("Network:"),
-            mock.call(f"CIDR : {inst.ip}/{inst.mask_length}"),
-            mock.call(f"{inst.network_range['start']} - {inst.network_range['end']}"),
-            mock.call(f"{inst.addresses} available addresses")
-        ]
-
-        self.assertEqual(expected_list, mocked_print.mock_calls)
-
     #
     # Normal types displays
     #
@@ -181,10 +167,10 @@ class NetworkBasicDisplays(unittest.TestCase):
     #
     @staticmethod
     def _prepare_type_display(machine_ip, display=True):
-        inst = nb.NetworkBasicDisplayer('192.168.1.0', 24)
+        inst = nb.NetworkBasicDisplayer(machine_ip, 24)
         inst.determine_network_range()
 
-        inst.display_type(machine_ip, display=display)
+        inst.display_type(display=display)
 
         return inst
 
@@ -194,9 +180,9 @@ class NetworkBasicDisplays(unittest.TestCase):
         inst = self._prepare_type_display('192.168.1.0')
         self.assertEqual([
             mock.call("Network:"),
-            mock.call(f"CIDR : {inst.ip}/{inst.mask_length}"),
-            mock.call(f"{inst.network_range['start']} - {inst.network_range['end']}"),
-            mock.call(f"{inst.addresses} available addresses"),
+            mock.call("CIDR : 192.168.1.0/24"),
+            mock.call("192.168.1.0 - 192.168.1.255"),
+            mock.call("254 available addresses"),
             mock.call(''),
             mock.call("The address 192.168.1.0 is a network address")
         ], mocked_print.mock_calls, msg='Fancy display: network address')
@@ -207,9 +193,9 @@ class NetworkBasicDisplays(unittest.TestCase):
         inst = self._prepare_type_display('192.168.1.4')
         self.assertEqual([
             mock.call("Network:"),
-            mock.call(f"CIDR : {inst.ip}/{inst.mask_length}"),
-            mock.call(f"{inst.network_range['start']} - {inst.network_range['end']}"),
-            mock.call(f"{inst.addresses} available addresses"),
+            mock.call("CIDR : 192.168.1.4/24"),
+            mock.call("192.168.1.0 - 192.168.1.255"),
+            mock.call("254 available addresses"),
             mock.call(''),
             mock.call("The address 192.168.1.4 is a computer address")
         ], mocked_print.mock_calls, msg='Fancy display: computer address')
@@ -220,30 +206,9 @@ class NetworkBasicDisplays(unittest.TestCase):
         inst = self._prepare_type_display('192.168.1.255')
         self.assertEqual([
             mock.call("Network:"),
-            mock.call(f"CIDR : {inst.ip}/{inst.mask_length}"),
-            mock.call(f"{inst.network_range['start']} - {inst.network_range['end']}"),
-            mock.call(f"{inst.addresses} available addresses"),
+            mock.call("CIDR : 192.168.1.255/24"),
+            mock.call("192.168.1.0 - 192.168.1.255"),
+            mock.call("254 available addresses"),
             mock.call(''),
             mock.call("The address 192.168.1.255 is a broadcast address")
         ], mocked_print.mock_calls, msg='Fancy display: broadcast address')
-
-
-class NetworkBasicForceCrash(unittest.TestCase):
-    """
-    Changing variables while we shouldnt so we provoke an Exception raise.
-    Used for coverage.
-
-    Keep in mind that these errors should never occur if one doesn't touch any variables.
-    """
-
-    @mock.patch('builtins.print')
-    def test_unexpected_address_type(self, _):
-
-        inst = nb.NetworkBasic('192.168.1.5', 24)
-        inst.determine_type()
-
-        # Force change type
-        inst.address_type = 3
-
-        # Force display call and fake parameters
-        self.assertRaises(Exception, lambda: inst._display())

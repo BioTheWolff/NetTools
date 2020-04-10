@@ -227,9 +227,13 @@ class NetworkBasic:
     # Template for child classes
     #
     def _display(self):
+        literal_netr = {"start": Utils.to_literal(self.network_range['start']),
+                        "end": Utils.to_literal(self.network_range['end'])}
+        literal_ip = Utils.to_literal(self.ip)
+
         print(self.lang_dict['network'])
-        print(self.lang_dict['cidr'].format(self.ip, self.mask_length))
-        print("{} - {}".format(self.network_range['start'], self.network_range['end']))
+        print(self.lang_dict['cidr'].format(literal_ip, self.mask_length))
+        print("{} - {}".format(literal_netr['start'], literal_netr['end']))
         print(self.lang_dict['addr_avail'].format(self.addresses))
         print('')
 
@@ -240,7 +244,7 @@ class NetworkBasic:
         else:
             raise Exception("Given address type other than expected address types")
 
-        print(self.lang_dict['addr_type'].format(self.ip, machine_type))
+        print(self.lang_dict['addr_type'].format(literal_ip, machine_type))
 
     #
     # Main functions
@@ -299,13 +303,13 @@ class NetworkBasicDisplayer(NetworkBasic):
         if display is True:
             self._display()
         else:
-            print(self.network_range)
+            print(Utils.netr_to_literal(self.network_range))
 
-    def display_type(self, machine_ip: str, display=False) -> None:
-        self.determine_type(machine_ip)
+    def display_type(self, display=False) -> None:
+        self.determine_type()
 
         if display is True:
-            self._display(machine_ip=machine_ip)
+            self._display()
         elif display is False:
             if self.address_type == 0:
                 machine_type = self.lang_dict['addr_types']['net']
@@ -313,7 +317,9 @@ class NetworkBasicDisplayer(NetworkBasic):
                 machine_type = self.lang_dict['addr_types']['mac']
             elif self.address_type == 2:
                 machine_type = self.lang_dict['addr_types']['bct']
+            else:
+                machine_type = None
 
-            temp = self.network_range
+            temp = Utils.netr_to_literal(self.network_range)
             temp['address_type'] = machine_type
             print(temp)
