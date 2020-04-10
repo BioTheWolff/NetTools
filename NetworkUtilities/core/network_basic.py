@@ -247,7 +247,7 @@ class NetworkBasic:
     #
     def determine_network_range(self, ip: List[int] = None, machine_bits: int = None):
 
-        ip = ip if ip else self.ip
+        ip_ = ip if ip else self.ip
         mask = [int(i) for i in
                 self.mask_length_to_literal(32 - machine_bits).split('.')
                 ] if machine_bits else self.mask
@@ -255,16 +255,16 @@ class NetworkBasic:
         # Network address
         net = []
         for i in range(4):
-            net.append(ip[i] & mask[i])
+            net.append(ip_[i] & mask[i])
 
         # Broadcast address
         bct = []
         for i in range(4):
-            bct.append(ip[i] | (255 ^ mask[i]))
+            bct.append(ip_[i] | (255 ^ mask[i]))
 
         result = {"start": net, "end": bct}
 
-        if ip is None and mask is None:
+        if ip is None and machine_bits is None:
             self.network_range = result
 
         return result

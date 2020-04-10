@@ -9,6 +9,7 @@ class Utils:
     #
     @staticmethod
     def ip_before(ip: List[int]):
+        ip_ = ip.copy()
         def _check(idx, content):
 
             if content[idx] == 0:
@@ -21,10 +22,11 @@ class Utils:
         if ip == [0, 0, 0, 0]:
             raise IPv4LimitError("bottom")
 
-        return _check(3, ip)
+        return _check(3, ip_)
 
     @staticmethod
     def ip_after(ip: List[int]):
+        ip_ = ip.copy()
         def _check(idx, content):
 
             if content[idx] == 255:
@@ -37,7 +39,7 @@ class Utils:
         if ip == [255, 255, 255, 255]:
             raise IPv4LimitError("top")
 
-        return _check(3, ip)
+        return _check(3, ip_)
 
     #
     # Checkers
