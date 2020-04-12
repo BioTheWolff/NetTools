@@ -1,9 +1,8 @@
-from NetworkUtilities.core.errors import MaskLengthOffBoundsException, \
+from NetworkUtilities.utils.errors import MaskLengthOffBoundsException, \
     RFCRulesWrongCoupleException, \
-    RFCRulesIPWrongRangeException, MaskNotProvided, IncorrectMaskException, IPOffNetworkRangeException, \
-    BytesLengthException, ByteNumberOffLimitsException
-from NetworkUtilities.core.utils import Utils
-from typing import Union, List, Iterable
+    RFCRulesIPWrongRangeException, MaskNotProvided, IncorrectMaskException, BytesLengthException, ByteNumberOffLimitsException
+from NetworkUtilities.utils.utils import Utils
+from typing import Union, List
 
 
 class NetworkBasic:
@@ -20,7 +19,7 @@ class NetworkBasic:
         'cidr': "CIDR : {}/{}",
         'cidr_adv': "CIDR (Classless Inter Domain Routing) : {}/{}",
         'addr_avail': "{} available addresses",
-        'addr_avail_advanced': "{} occupied addresses out of {} available addresses",
+        'addr_avail_advanced': "addresses: {} occupied / {} available",
         'addr_types': {
             'net': "network",
             'mac': "computer",
@@ -31,7 +30,7 @@ class NetworkBasic:
         'utils': "{} sub-network{}",
         'sub_addr': "{} - {} ({} addresses)",
         'sub_addr_advanced': "{} - {} ({} available addresses, {} requested)",
-        'net_usage': "NetworkBasic usage:"
+        'net_usage': "Network usage:"
     }
 
     #

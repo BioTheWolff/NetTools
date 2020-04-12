@@ -1,6 +1,6 @@
 import unittest
-import NetworkUtilities.core.utils as u
-import NetworkUtilities.core.errors as e
+import NetworkUtilities.utils.utils as u
+import NetworkUtilities.utils.errors as e
 
 
 class UtilsTests(unittest.TestCase):

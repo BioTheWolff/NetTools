@@ -1,4 +1,4 @@
-import NetworkUtilities.utils.subnetworkbuilder as sb
+import NetworkUtilities.core.subnetworkbuilder as sb
 import unittest
 
 

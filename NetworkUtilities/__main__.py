@@ -1,6 +1,6 @@
 import argparse
 from NetworkUtilities.core.network_basic import NetworkBasicDisplayer
-from NetworkUtilities.utils.subnetworkbuilder import SubnetworkBuilder
+from NetworkUtilities.core.subnetworkbuilder import SubnetworkBuilder
 
 
 def main():
@@ -8,11 +8,11 @@ def main():
     subparsers = parser.add_subparsers(dest="subparser", help="Sub-modules")
 
     # network parser
-    network_parser = subparsers.add_parser("network", help="Module to determine a network range or the type of an IP")
+    network_parser = subparsers.add_parser("network", help="Module to determine a network range and type of an IP",
+                                           aliases="net")
     network_parser.add_argument("ip", help="One IP in the network")
     network_parser.add_argument("mask", help="The network mask. You can provide either the mask or its length")
 
-    network_parser.add_argument("-T", "--type", help="Display the type of the provided IP", type=str)
     network_parser.add_argument("-R", "--raw", help="Returns the array of utils instad of displaying a smooth recap",
                                 action="store_false")
 
@@ -29,20 +29,11 @@ def main():
     group.add_argument("-A", "--advanced", help="Displays more informations about how the utils are composed, and "
                                                 "also some advices on the masks that can be used", action="store_true")
 
-    # prober parser
-    prober = subparsers.add_parser("probe", help="Module to probe local network and output caracteristics")
-    prober.add_argument("-R", "--raw", help="Returns the network range instad of displaying a smooth recap",
-                        action="store_false")
-
     args = parser.parse_args()
 
     if args.subparser == "network":
-        if args.type:
-            net = NetworkBasicDisplayer(args.ip, args.mask)
-            net.display_type(args.type, display=args.raw)
-        else:
-            net = NetworkBasicDisplayer(args.ip, args.mask)
-            net.display_range(display=args.raw)
+        net = NetworkBasicDisplayer(args.ip, args.mask)
+        net.display_type(display=args.raw)
 
     elif args.subparser == "subnet":
         net = SubnetworkBuilder(args.ip, args.mask, args.subnets_sizes)

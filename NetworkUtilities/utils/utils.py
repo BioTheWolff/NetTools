@@ -1,4 +1,4 @@
-from NetworkUtilities.core.errors import IPv4LimitError, NetworkLimitException
+from NetworkUtilities.utils.errors import IPv4LimitError, NetworkLimitException
 from typing import List
 
 

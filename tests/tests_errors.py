@@ -1,6 +1,6 @@
 import unittest
 import unittest.mock as m
-import NetworkUtilities.core.errors as e
+import NetworkUtilities.utils.errors as e
 
 
 class ErrorsInstanciationTests(unittest.TestCase):

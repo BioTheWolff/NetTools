@@ -1,6 +1,6 @@
 from NetworkUtilities.core.network_basic import NetworkBasic
-from NetworkUtilities.core.errors import MaskTooSmallException
-from NetworkUtilities.core.utils import Utils
+from NetworkUtilities.utils.errors import MaskTooSmallException
+from NetworkUtilities.utils.utils import Utils
 from typing import Union, List, Optional
 
 
@@ -8,8 +8,7 @@ class SubnetworkBuilder(NetworkBasic):
     total_network_range = {}
     subnets_sizes, subnets, submasks_machine_bits = [], [], []
 
-    def __display_subnets(self, advanced=False) -> None:
-
+    def __build_graph(self):
         # graph
         occupied = 0
         for i in range(len(self.submasks_machine_bits)):
@@ -30,12 +29,21 @@ class SubnetworkBuilder(NetworkBasic):
         else:
             t = ''
 
+        return occupied, graph, t
+
+    def __display_subnets(self, advanced=False) -> None:
+
+        occupied, graph, t = self.__build_graph()
+
+        literal_ip = Utils.to_literal(self.ip)
+        literal_netr = Utils.netr_to_literal(self.total_network_range)
+
         print(self.lang_dict['network'])
         if advanced is True:
-            print(self.lang_dict['cidr_adv'].format(self.ip, self.mask_length))
+            print(self.lang_dict['cidr_adv'].format(literal_ip, self.mask_length))
         else:
-            print(self.lang_dict['cidr'].format(self.ip, self.mask_length))
-        print("{} - {}".format(self.total_network_range['start'], self.total_network_range['end']))
+            print(self.lang_dict['cidr'].format(literal_ip, self.mask_length))
+        print("{} - {}".format(literal_netr['start'], literal_netr['end']))
         if advanced is True:
             print(self.lang_dict['addr_avail_advanced'].format(occupied, self.addresses))
         else:
@@ -44,18 +52,25 @@ class SubnetworkBuilder(NetworkBasic):
         print(self.lang_dict['utils'].format(len(self.subnets), t))
 
         for i in range(len(self.subnets)):
-            if advanced is True:
-                print(self.lang_dict['sub_addr_advanced'].format(self.subnets[i]['start'],
-                                                                 self.subnets[i]['end'],
+            literal_sub_netr = Utils.netr_to_literal(self.subnets[i])
+
+            if advanced:
+                print(self.lang_dict['sub_addr_advanced'].format(literal_sub_netr['start'],
+                                                                 literal_sub_netr['end'],
                                                                  2 ** self.submasks_machine_bits[i] - 2,
                                                                  self.subnets_sizes[i]))
             else:
-                print(self.lang_dict['sub_addr'].format(self.subnets[i]['start'], self.subnets[i]['end'],
+                print(self.lang_dict['sub_addr'].format(literal_sub_netr['start'],
+                                                        literal_sub_netr['end'],
                                                         2 ** self.submasks_machine_bits[i] - 2))
 
-        print('')
-        print(self.lang_dict['net_usage'])
-        print(graph)
+        if advanced:
+            print('')
+            print(self.lang_dict['net_usage'])
+            print(graph)
+
+    def __to_printable_subnets(self):
+        return [Utils.netr_to_literal(i) for i in self.subnets]
 
     def __determine_required_submasks_sizes(self) -> None:
 
@@ -100,6 +115,6 @@ class SubnetworkBuilder(NetworkBasic):
         if display is True:
             self.__display_subnets(advanced)
         elif display is False:
-            print(self.subnets)
+            print(self.__to_printable_subnets())
 
         return self.subnets

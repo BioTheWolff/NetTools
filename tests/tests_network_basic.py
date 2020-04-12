@@ -1,5 +1,5 @@
 import NetworkUtilities.core.network_basic as nb
-import NetworkUtilities.core.errors as er
+import NetworkUtilities.utils.errors as er
 import unittest
 import unittest.mock as mock
 
