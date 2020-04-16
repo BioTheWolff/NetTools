@@ -2,7 +2,7 @@ from NetworkUtilities.utils.errors import MaskLengthOffBoundsException, \
     RFCRulesWrongCoupleException, \
     RFCRulesIPWrongRangeException, MaskNotProvided, IncorrectMaskException, BytesLengthException, ByteNumberOffLimitsException
 from NetworkUtilities.utils.utils import Utils
-from typing import Union, List
+from typing import Union, List, Dict
 
 
 class NetworkBasic:
@@ -11,7 +11,11 @@ class NetworkBasic:
     address_type = None
     mask_length, addresses = 0, 0
     rfc_current_range, rfc_masks = None, [16, 12, 8]
-    rfc_allowed_ranges = [[192, [168, 168]], [172, [16, 31]], [10, [0, 255]]]
+    rfc_allowed_ranges = [
+        [192, [168, 168]],
+        [172, [16, 31]],
+        [10, [0, 255]]
+    ]
     mask_allowed_bytes = [0, 128, 192, 224, 240, 248, 252, 254, 255]
     network_range = {}
     lang_dict = {
@@ -248,7 +252,7 @@ class NetworkBasic:
     #
     # Main functions
     #
-    def determine_network_range(self, ip: List[int] = None, machine_bits: int = None):
+    def determine_network_range(self, ip: List[int] = None, machine_bits: int = None) -> Dict[str, List[int]]:
 
         ip_ = ip if ip else self.ip
         mask = [int(i) for i in
