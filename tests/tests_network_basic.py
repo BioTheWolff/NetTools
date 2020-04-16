@@ -7,8 +7,8 @@ import unittest.mock as mock
 class NetworkBasicTests(unittest.TestCase):
 
     def _test_range(self, ip, mask=None):
-        r = nb.NetworkBasic(ip, mask).determine_network_range()
-        self.assertEqual({'start': [192, 168, 1, 0], 'end': [192, 168, 1, 255]}, r)
+        r = nb.NetworkBasic(ip, mask).displayable_network_range
+        self.assertEqual({'start': '192.168.1.0', 'end': '192.168.1.255'}, r)
 
     def test_input_types(self):
 

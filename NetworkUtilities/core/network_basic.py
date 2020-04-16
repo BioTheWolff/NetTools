@@ -1,13 +1,15 @@
 from NetworkUtilities.utils.errors import MaskLengthOffBoundsException, \
     RFCRulesWrongCoupleException, \
-    RFCRulesIPWrongRangeException, MaskNotProvided, IncorrectMaskException, BytesLengthException, ByteNumberOffLimitsException
+    RFCRulesIPWrongRangeException, MaskNotProvided, IncorrectMaskException, BytesLengthException, \
+    ByteNumberOffLimitsException
 from NetworkUtilities.utils.utils import Utils
+from NetworkUtilities.utils.ip_class import FourBytesLiteral
 from typing import Union, List, Dict
 
 
 class NetworkBasic:
-    ip: List[int] = None
-    mask: Union[List[int], str] = None
+    ip: FourBytesLiteral = None
+    mask: Union[FourBytesLiteral, str] = None
     address_type = None
     mask_length, addresses = 0, 0
     rfc_current_range, rfc_masks = None, [16, 12, 8]
@@ -17,7 +19,7 @@ class NetworkBasic:
         [10, [0, 255]]
     ]
     mask_allowed_bytes = [0, 128, 192, 224, 240, 248, 252, 254, 255]
-    network_range = {}
+    network_range: Dict[str, FourBytesLiteral] = {}
     lang_dict = {
         'network': "Network:",
         'cidr': "CIDR : {}/{}",
@@ -36,6 +38,13 @@ class NetworkBasic:
         'sub_addr_advanced': "{} - {} ({} available addresses, {} requested)",
         'net_usage': "Network usage:"
     }
+
+    @property
+    def displayable_network_range(self):
+        return {
+            "start": str(self.network_range['start']),
+            "end": str(self.network_range['end'])
+        }
 
     #
     # DUNDERS
@@ -60,12 +69,12 @@ class NetworkBasic:
         if mask is None:
             try:
                 ip, mask = ip.split('/')
-                self.ip = [int(i) for i in ip.split('.')]
+                self.ip = FourBytesLiteral().set_from_string_literal(ip)
                 self.mask = mask
             except ValueError:
                 raise MaskNotProvided(ip)
         else:
-            self.ip = [int(i) for i in ip.split('.')]
+            self.ip = FourBytesLiteral().set_from_string_literal(ip)
             self.mask = mask
 
         self._verify_provided_types()
@@ -153,12 +162,12 @@ class NetworkBasic:
 
             # Stock the length
             self.mask_length = length
-            self.mask = [int(i) for i in temp]
+            self.mask = FourBytesLiteral().set_from_string_literal(".".join(temp))
 
         except AttributeError:
             # The mask is given by its length
             self.mask_length = int(self.mask)
-            self.mask = [int(i) for i in self.mask_length_to_literal(self.mask_length).split('.')]
+            self.mask = FourBytesLiteral().set_from_string_literal(self.mask_length_to_literal(self.mask_length))
 
         finally:
             self.addresses = 2 ** (32 - self.mask_length) - 2
@@ -179,11 +188,11 @@ class NetworkBasic:
 
         def _check(content):
             ip_test = False
-            for I in range(3):
-                if (int(content[0]) == self.rfc_allowed_ranges[I][0]) and \
-                        (self.rfc_allowed_ranges[I][1][0] <= int(content[1]) <= self.rfc_allowed_ranges[I][1][1]):
+            for i_ in range(3):
+                if (int(content[0]) == self.rfc_allowed_ranges[i_][0]) and \
+                        (self.rfc_allowed_ranges[i_][1][0] <= int(content[1]) <= self.rfc_allowed_ranges[i_][1][1]):
                     ip_test = True
-                    self.rfc_current_range = I
+                    self.rfc_current_range = i_
 
             if ip_test is False:
                 raise RFCRulesIPWrongRangeException(ip[0], ip[1])
@@ -252,7 +261,7 @@ class NetworkBasic:
     #
     # Main functions
     #
-    def determine_network_range(self, ip: List[int] = None, machine_bits: int = None) -> Dict[str, List[int]]:
+    def determine_network_range(self, ip: List[int] = None, machine_bits: int = None) -> Dict[str, FourBytesLiteral]:
 
         ip_ = ip if ip else self.ip
         mask = [int(i) for i in
@@ -260,12 +269,12 @@ class NetworkBasic:
                 ] if machine_bits else self.mask
 
         # Network address
-        net = []
+        net = FourBytesLiteral()
         for i in range(4):
             net.append(ip_[i] & mask[i])
 
         # Broadcast address
-        bct = []
+        bct = FourBytesLiteral()
         for i in range(4):
             bct.append(ip_[i] | (255 ^ mask[i]))
 

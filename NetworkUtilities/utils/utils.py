@@ -1,5 +1,6 @@
-from NetworkUtilities.utils.errors import IPv4LimitError, NetworkLimitException
-from typing import List
+from NetworkUtilities.utils.errors import IPv4LimitError, NetworkLimitException, BytesLengthException, \
+    ByteNumberOffLimitsException
+from typing import List, Dict
 
 
 class Utils:
@@ -8,7 +9,7 @@ class Utils:
     # Getters
     #
     @staticmethod
-    def ip_before(ip: List[int]):
+    def ip_before(ip: List[int]) -> List[int]:
         ip_ = ip.copy()
         def _check(idx, content):
 
@@ -25,7 +26,7 @@ class Utils:
         return _check(3, ip_)
 
     @staticmethod
-    def ip_after(ip: List[int]):
+    def ip_after(ip: List[int]) -> List[int]:
         ip_ = ip.copy()
         def _check(idx, content):
 
@@ -45,7 +46,7 @@ class Utils:
     # Checkers
     #
     @staticmethod
-    def ip_in_range(network_range, ip):
+    def ip_in_range(network_range: Dict[str, List[int]], ip: List[int]) -> bool:
         """
         checks if an ip is in the given network range
 
@@ -99,6 +100,18 @@ class Utils:
             # Class C network, limits are 192.168.0.0 - 192.168.255.255
             if idx == 2 and value == 0:
                 raise NetworkLimitException()
+
+    @staticmethod
+    def check_fbl(literal: str):
+        # FBL stands for FourBytesLiteral
+        split = [int(i) for i in literal.split('.')]
+
+        if len(split) != 4:
+            raise BytesLengthException("literal", len(split))
+
+        for i in split:
+            if not (0 <= i <= 255):
+                raise ByteNumberOffLimitsException("literal", i, split.index(i))
 
     #
     # Others
