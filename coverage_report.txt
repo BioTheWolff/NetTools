@@ -1,0 +1,18 @@
+
+Name                                         Stmts   Miss  Cover   Missing
+--------------------------------------------------------------------------
+NetworkUtilities\__init__.py                     0      0   100%
+NetworkUtilities\core\__init__.py                0      0   100%
+NetworkUtilities\core\network_basic.py         163      5    97%   102, 105, 254, 313, 330
+NetworkUtilities\core\subnetworkbuilder.py      86      0   100%
+NetworkUtilities\utils\__init__.py               0      0   100%
+NetworkUtilities\utils\errors.py                91      0   100%
+NetworkUtilities\utils\ip_class.py              98      0   100%
+NetworkUtilities\utils\utils.py                 48      0   100%
+tests\tests_errors.py                           57      0   100%
+tests\tests_ip_class.py                         38      1    97%   63
+tests\tests_network_basic.py                    69      0   100%
+tests\tests_subnetwork_builder.py               25      0   100%
+tests\tests_utils.py                            35      0   100%
+--------------------------------------------------------------------------
+TOTAL                                          710      6    99%

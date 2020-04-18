@@ -35,11 +35,11 @@ class LimitedList:
     def __len__(self) -> int:
         return len(self.__list)
 
-    def __copy__(self) -> Any:
+    def __copy__(self):
         return LimitedList(self.limit).append_all(self.__list)
 
-    def __index__(self, obj: Any, start: int = None, stop: int = None):
-        return self.__list.index(obj, start, stop)
+    def __index__(self, obj: Any):
+        return self.__list.index(obj)
 
     # NORMAL
     def append(self, obj: Any):
@@ -63,11 +63,8 @@ class FourBytesLiteral:
     __bytes: LimitedList = None
 
     # Dunders
-    def __init__(self) -> None:
-        self.__bytes = LimitedList(4)
-
     def __getitem__(self, item) -> Any:
-        return self.__bytes[item]
+        return self.__bytes[item] if self.__bytes else None
 
     def __setitem__(self, key, value) -> None:
         self.__bytes[key] = value
@@ -76,20 +73,26 @@ class FourBytesLiteral:
         return len(self.__bytes)
 
     def __str__(self):
-        return ".".join([str(i) for i in self.__bytes])
+        return ".".join([str(i) for i in self.__bytes]) if self.bytes else "No literal"
 
     def __copy__(self):
-        return FourBytesLiteral().set_eval(self.bytes)
+        return FourBytesLiteral().set_eval(self.bytes) if self.__bytes else FourBytesLiteral()
 
     # Properties & getters
     @property
     def bytes(self) -> LimitedList:
         return self.__bytes
 
-    def index(self, i: Any, start: int = None, stop: int = None) -> int:
-        return self.__bytes.__index__(i, start, stop)
+    @property
+    def bytes_list(self) -> list:
+        return self.__bytes.content if self.__bytes else None
+
+    def index(self, i: Any) -> int:
+        return self.__bytes.__index__(i) if self.__bytes else None
 
     def append(self, obj: Any) -> None:
+        if self.__bytes is None:
+            self.__bytes = LimitedList(4)
         self.__bytes.append(obj)
 
     # Setters (possibility of chaining)
@@ -119,7 +122,7 @@ class FourBytesLiteral:
         # Allow partial filling
         if to_set.length < 4:
             for i in range(4 - to_set.length):
-                to_set[4-i] = 0
+                to_set.append(0)
 
         self.__bytes = to_set
 
@@ -132,7 +135,7 @@ class FourBytesLiteral:
         # Allow partial filling
         if len(value) < 4:
             for i in range(4 - len(value)):
-                value[4-i] = 0
+                value.append(0)
 
         self.__bytes = LimitedList(4).append_all(value)
 

@@ -33,3 +33,18 @@ class UtilsTests(unittest.TestCase):
         self.assertEqual(content([192, 168, 1, 0]), content([192, 168, 0, 255], True))
         self.assertEqual(content([192, 168, 0, 0]), content([192, 167, 255, 255], True))
         self.assertEqual(content([192, 0, 0, 0]), content([191, 255, 255, 255], True))
+
+    def test_dec_to_bin(self):
+        self.assertEqual(110100, self.c.dec_to_bin(52))
+
+    def test_ip_in_range(self):
+        netr = {
+            "start": i.FourBytesLiteral().set_eval('192.168.1.0'),
+            "end": i.FourBytesLiteral().set_eval('192.168.1.255')
+        }
+
+        in_r = i.FourBytesLiteral().set_eval('192.168.1.4')
+        out_r = i.FourBytesLiteral().set_eval('192.168.4.0')
+
+        self.assertEqual(True, self.c.ip_in_range(netr, in_r), msg="In range")
+        self.assertEqual(False, self.c.ip_in_range(netr, out_r), msg="Not in range")

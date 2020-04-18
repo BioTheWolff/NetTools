@@ -23,7 +23,7 @@ class Utils:
                 content[idx] = content[idx] - 1
                 return content
 
-        ip_ = ip.bytes.content.copy()
+        ip_ = ip.bytes_list.copy()
         verify(ip_)
         return FourBytesLiteral().set_eval(_check(3, ip_))
 
@@ -42,7 +42,7 @@ class Utils:
                 content[idx] = content[idx] + 1
                 return content
 
-        ip_ = ip.bytes.content.copy()
+        ip_ = ip.bytes_list.copy()
         verify(ip_)
         return FourBytesLiteral().set_eval(_check(3, ip_))
 
@@ -50,7 +50,7 @@ class Utils:
     # Checkers
     #
     @staticmethod
-    def ip_in_range(network_range: Dict[str, List[int]], ip: List[int]) -> bool:
+    def ip_in_range(network_range: Dict[str, FourBytesLiteral], ip: FourBytesLiteral) -> bool:
         """
         checks if an ip is in the given network range
 
@@ -60,50 +60,16 @@ class Utils:
         """
 
         start, end = network_range['start'], network_range['end']
-        temp, ip_list = start, []
+        temp, ip_list = start.__copy__(), []
 
-        ip_list.append(start)
-        ip_list.append(end)
+        ip_list.append(start.bytes_list)
+        ip_list.append(end.bytes_list)
 
-        while temp != end:
+        while str(temp) != str(end):
             temp = Utils.ip_after(temp)
-            ip_list.append(temp)
+            ip_list.append(str(temp))
 
-        return ip in ip_list
-
-    #
-    # Suiciders
-    #
-    @staticmethod
-    def in_rfc_range(rfc_current_range, idx, value):
-        # With these conditions, we prevent networks from going out of the RFC local ranges
-        if rfc_current_range == 2:
-            # Class A network, limits are 10.0.0.0 - 10.255.255.255
-            if idx == 1 and value == 255:
-                raise NetworkLimitException()
-        elif rfc_current_range == 1:
-            # Class B network, limits are 172.16.0.0 - 172.31.255.255
-            if idx == 1 and value == 31:
-                raise NetworkLimitException()
-        elif rfc_current_range == 0:
-            # Class C network, limits are 192.168.0.0 - 192.168.255.255
-            if idx == 2 and value == 255:
-                raise NetworkLimitException()
-
-    @staticmethod
-    def in_rfc_range_reverse(rfc_current_range, idx, value):
-        if rfc_current_range == 2:
-            # Class A network, limits are 10.0.0.0 - 10.255.255.255
-            if idx == 1 and value == 0:
-                raise NetworkLimitException()
-        elif rfc_current_range == 1:
-            # Class B network, limits are 172.16.0.0 - 172.31.255.255
-            if idx == 1 and value == 16:
-                raise NetworkLimitException()
-        elif rfc_current_range == 0:
-            # Class C network, limits are 192.168.0.0 - 192.168.255.255
-            if idx == 2 and value == 0:
-                raise NetworkLimitException()
+        return str(ip) in ip_list
 
     #
     # Others
