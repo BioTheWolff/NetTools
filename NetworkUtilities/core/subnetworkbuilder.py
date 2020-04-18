@@ -1,12 +1,12 @@
 from NetworkUtilities.core.network_basic import NetworkBasic
 from NetworkUtilities.utils.errors import MaskTooSmallException
 from NetworkUtilities.utils.utils import Utils
-from typing import Union, List, Optional
+from typing import Union, List
 
 
 class SubnetworkBuilder(NetworkBasic):
-    total_network_range = {}
-    subnets_sizes, subnets, submasks_machine_bits = [], [], []
+    total_network_range = None
+    subnets_sizes, subnets, submasks_machine_bits = None, None, None
 
     def __build_graph(self):
         # graph
@@ -84,9 +84,11 @@ class SubnetworkBuilder(NetworkBasic):
 
         self.submasks_machine_bits = submasks
 
-    def __init__(self, starting_ip: str, mask: Union[str, int], subnets_sizes: List[int]) -> None:
+    def __init__(self, subnets_sizes: List[int], starting_ip: str, mask: Union[str, int] = None) -> None:
         super().__init__(starting_ip, mask)
         self.subnets_sizes = sorted(subnets_sizes, reverse=True)
+        self.subnets = []
+        self.submasks_machine_bits = []
 
         # first, let's check if the provided mask can handle all the addresses requested
         self.total_network_range = self.determine_network_range()

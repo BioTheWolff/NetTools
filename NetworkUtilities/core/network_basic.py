@@ -4,7 +4,7 @@ from NetworkUtilities.utils.errors import MaskLengthOffBoundsException, \
     ByteNumberOffLimitsException
 from NetworkUtilities.utils.utils import Utils
 from NetworkUtilities.utils.ip_class import FourBytesLiteral
-from typing import Union, List, Dict
+from typing import Union, Dict
 
 
 class NetworkBasic:
@@ -24,8 +24,8 @@ class NetworkBasic:
         'network': "Network:",
         'cidr': "CIDR : {}/{}",
         'cidr_adv': "CIDR (Classless Inter Domain Routing) : {}/{}",
-        'addr_avail': "{} available addresses",
-        'addr_avail_advanced': "addresses: {} occupied / {} available",
+        'addr_avail': "{} total addresses",
+        'addr_avail_advanced': "addresses: {} occupied / {} total",
         'addr_types': {
             'net': "network",
             'mac': "computer",
@@ -79,6 +79,7 @@ class NetworkBasic:
         self._verify_rfc_rules()
 
         self.determine_network_range()
+        self.determine_type()
 
     #
     # __init__ Tests
@@ -307,7 +308,6 @@ class NetworkBasic:
 class NetworkBasicDisplayer(NetworkBasic):
 
     def display_range(self, display=False) -> None:
-        self.determine_network_range()
 
         if display is True:
             self._display()

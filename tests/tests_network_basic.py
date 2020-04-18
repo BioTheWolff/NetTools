@@ -182,7 +182,7 @@ class NetworkBasicDisplays(unittest.TestCase):
             mock.call("Network:"),
             mock.call("CIDR : 192.168.1.0/24"),
             mock.call("192.168.1.0 - 192.168.1.255"),
-            mock.call("254 available addresses"),
+            mock.call("254 total addresses"),
             mock.call(''),
             mock.call("The address 192.168.1.0 is a network address")
         ], mocked_print.mock_calls, msg='Fancy display: network address')
@@ -195,7 +195,7 @@ class NetworkBasicDisplays(unittest.TestCase):
             mock.call("Network:"),
             mock.call("CIDR : 192.168.1.4/24"),
             mock.call("192.168.1.0 - 192.168.1.255"),
-            mock.call("254 available addresses"),
+            mock.call("254 total addresses"),
             mock.call(''),
             mock.call("The address 192.168.1.4 is a computer address")
         ], mocked_print.mock_calls, msg='Fancy display: computer address')
@@ -208,7 +208,7 @@ class NetworkBasicDisplays(unittest.TestCase):
             mock.call("Network:"),
             mock.call("CIDR : 192.168.1.255/24"),
             mock.call("192.168.1.0 - 192.168.1.255"),
-            mock.call("254 available addresses"),
+            mock.call("254 total addresses"),
             mock.call(''),
             mock.call("The address 192.168.1.255 is a broadcast address")
         ], mocked_print.mock_calls, msg='Fancy display: broadcast address')

@@ -25,7 +25,7 @@ def main():
 
     group = subnetbuilder.add_mutually_exclusive_group()
     group.add_argument("-R", "--raw", help="Returns the array of utils instad of displaying a smooth recap",
-                       action="store_false")
+                       action="store_true")
     group.add_argument("-A", "--advanced", help="Displays more informations about how the utils are composed, and "
                                                 "also some advices on the masks that can be used", action="store_true")
 
@@ -36,8 +36,11 @@ def main():
         net.display_type(display=args.raw)
 
     elif args.subparser == "subnet":
-        net = SubnetworkBuilder(args.ip, args.mask, args.subnets_sizes)
-        net.build_subnets(display=args.raw, advanced=args.advanced)
+        net = SubnetworkBuilder(args.subnets_sizes, args.ip, args.mask)
+        if not args.raw:
+            net.print_subnetworks_fancy(advanced=args.advanced)
+        else:
+            net.print_subnetworks()
 
 
 if __name__ == '__main__':
