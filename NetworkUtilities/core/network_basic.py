@@ -41,10 +41,7 @@ class NetworkBasic:
 
     @property
     def displayable_network_range(self):
-        return {
-            "start": str(self.network_range['start']),
-            "end": str(self.network_range['end'])
-        }
+        return Utils.netr_to_literal(self.network_range)
 
     #
     # DUNDERS
@@ -239,9 +236,8 @@ class NetworkBasic:
     # Template for child classes
     #
     def _display(self):
-        literal_netr = {"start": Utils.to_literal(self.network_range['start']),
-                        "end": Utils.to_literal(self.network_range['end'])}
-        literal_ip = Utils.to_literal(self.ip)
+        literal_netr = self.displayable_network_range
+        literal_ip = str(self.ip)
 
         print(self.lang_dict['network'])
         print(self.lang_dict['cidr'].format(literal_ip, self.mask_length))
@@ -261,7 +257,8 @@ class NetworkBasic:
     #
     # Main functions
     #
-    def determine_network_range(self, ip: List[int] = None, machine_bits: int = None) -> Dict[str, FourBytesLiteral]:
+    def determine_network_range(self, ip: FourBytesLiteral = None, machine_bits: int = None) \
+            -> Dict[str, FourBytesLiteral]:
 
         ip_ = ip if ip else self.ip
         mask = [int(i) for i in
@@ -295,11 +292,11 @@ class NetworkBasic:
             IPOffNetworkRangeException: If the given IP is not in the network range
         """
 
-        res = self.determine_network_range()
+        res = self.displayable_network_range
 
-        if res['start'] == self.ip:
+        if res['start'] == str(self.ip):
             self.address_type = 0
-        elif res['end'] == self.ip:
+        elif res['end'] == str(self.ip):
             self.address_type = 2
         else:
             self.address_type = 1

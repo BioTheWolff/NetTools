@@ -1,5 +1,5 @@
-from typing import Any
-from .utils import Utils
+from typing import Any, Union
+from .errors import ByteNumberOffLimitsException, BytesLengthException
 
 
 class LimitedList:
@@ -15,6 +15,10 @@ class LimitedList:
     @property
     def length(self) -> int:
         return len(self.__list)
+
+    @property
+    def content(self) -> list:
+        return self.__list
 
     # DUNDERS
     def __init__(self, size: int) -> None:
@@ -74,13 +78,40 @@ class FourBytesLiteral:
     def __str__(self):
         return ".".join([str(i) for i in self.__bytes])
 
+    def __copy__(self):
+        return FourBytesLiteral().set_eval(self.bytes)
+
     # Properties & getters
     @property
     def bytes(self) -> LimitedList:
         return self.__bytes
 
-    @bytes.setter
-    def bytes(self, value: LimitedList):
+    def index(self, i: Any, start: int = None, stop: int = None) -> int:
+        return self.__bytes.__index__(i, start, stop)
+
+    def append(self, obj: Any) -> None:
+        self.__bytes.append(obj)
+
+    # Setters (possibility of chaining)
+    def set_eval(self, value: Union[str, LimitedList, list]):
+        if isinstance(value, str):
+            self.set_from_string_literal(value)
+        elif isinstance(value, LimitedList):
+            self.set_from_limited_list(value)
+        elif isinstance(value, list):
+            self.set_from_builtin_list(value)
+        else:
+            raise Exception("Formats can only be string literals, builtin lists or LimitedList instances")
+
+        return self
+
+    def set_from_string_literal(self, value: str):
+        check_fbl(value)
+        self.__bytes = LimitedList(4).append_all([int(i) for i in value.split('.')])
+
+        return self
+
+    def set_from_limited_list(self, value: LimitedList):
         if value.limit != 4:
             raise Exception("IPv4 LimitedList must be capped at 4")
 
@@ -92,15 +123,29 @@ class FourBytesLiteral:
 
         self.__bytes = to_set
 
-    def index(self, i: Any, start: int = None, stop: int = None) -> int:
-        return self.__bytes.__index__(i, start, stop)
+        return self
 
-    def append(self, obj: Any) -> None:
-        self.__bytes.append(obj)
+    def set_from_builtin_list(self, value: list):
+        if len(value) > 4:
+            raise Exception("IPv4 bytes must be capped at 4")
 
-    # Setter
-    def set_from_string_literal(self, str_lit: str):
-        Utils.check_fbl(str_lit)
-        self.__bytes = LimitedList(4).append_all([int(i) for i in str_lit.split('.')])
+        # Allow partial filling
+        if len(value) < 4:
+            for i in range(4 - len(value)):
+                value[4-i] = 0
+
+        self.__bytes = LimitedList(4).append_all(value)
 
         return self
+
+
+def check_fbl(literal: str):
+    # FBL stands for FourBytesLiteral
+    split = [int(i) for i in literal.split('.')]
+
+    if len(split) != 4:
+        raise BytesLengthException("literal", len(split))
+
+    for i in split:
+        if not (0 <= i <= 255):
+            raise ByteNumberOffLimitsException("literal", i, split.index(i))

@@ -1,6 +1,7 @@
 from NetworkUtilities.utils.errors import IPv4LimitError, NetworkLimitException, BytesLengthException, \
     ByteNumberOffLimitsException
-from typing import List, Dict
+from NetworkUtilities.utils.ip_class import FourBytesLiteral, LimitedList
+from typing import List, Dict, Union, Any
 
 
 class Utils:
@@ -9,8 +10,11 @@ class Utils:
     # Getters
     #
     @staticmethod
-    def ip_before(ip: List[int]) -> List[int]:
-        ip_ = ip.copy()
+    def ip_before(ip: FourBytesLiteral) -> FourBytesLiteral:
+        def verify(t):
+            if t == [0, 0, 0, 0]:
+                raise IPv4LimitError("bottom")
+
         def _check(idx, content):
 
             if content[idx] == 0:
@@ -20,14 +24,16 @@ class Utils:
                 content[idx] = content[idx] - 1
                 return content
 
-        if ip == [0, 0, 0, 0]:
-            raise IPv4LimitError("bottom")
-
-        return _check(3, ip_)
+        ip_ = ip.bytes.content.copy()
+        verify(ip_)
+        return FourBytesLiteral().set_eval(_check(3, ip_))
 
     @staticmethod
-    def ip_after(ip: List[int]) -> List[int]:
-        ip_ = ip.copy()
+    def ip_after(ip: FourBytesLiteral) -> FourBytesLiteral:
+        def verify(t):
+            if t == [255, 255, 255, 255]:
+                raise IPv4LimitError("top")
+
         def _check(idx, content):
 
             if content[idx] == 255:
@@ -37,10 +43,9 @@ class Utils:
                 content[idx] = content[idx] + 1
                 return content
 
-        if ip == [255, 255, 255, 255]:
-            raise IPv4LimitError("top")
-
-        return _check(3, ip_)
+        ip_ = ip.bytes.content.copy()
+        verify(ip_)
+        return FourBytesLiteral().set_eval(_check(3, ip_))
 
     #
     # Checkers
@@ -101,18 +106,6 @@ class Utils:
             if idx == 2 and value == 0:
                 raise NetworkLimitException()
 
-    @staticmethod
-    def check_fbl(literal: str):
-        # FBL stands for FourBytesLiteral
-        split = [int(i) for i in literal.split('.')]
-
-        if len(split) != 4:
-            raise BytesLengthException("literal", len(split))
-
-        for i in split:
-            if not (0 <= i <= 255):
-                raise ByteNumberOffLimitsException("literal", i, split.index(i))
-
     #
     # Others
     #
@@ -122,7 +115,7 @@ class Utils:
 
     @staticmethod
     def netr_to_literal(x):
-        return {"start": Utils.to_literal(x["start"]), "end": Utils.to_literal(x['end'])}
+        return {"start": str(x["start"]), "end": str(x['end'])}
 
     @staticmethod
     def dec_to_bin(x):

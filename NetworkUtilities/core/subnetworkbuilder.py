@@ -103,7 +103,9 @@ class SubnetworkBuilder(NetworkBasic):
                 power += 1
             raise MaskTooSmallException(self.mask_length, 32 - power)
 
-    def build_subnets(self, display: Optional[bool] = None, advanced: Optional[bool] = None):
+        self.build_subnets()
+
+    def build_subnets(self) -> None:
         start_ip = self.network_range['start']
 
         for i in range(len(self.subnets_sizes)):
@@ -112,9 +114,15 @@ class SubnetworkBuilder(NetworkBasic):
             self.subnets.append(result)
             start_ip = Utils.ip_after(result['end'])
 
-        if display is True:
-            self.__display_subnets(advanced)
-        elif display is False:
-            print(self.__to_printable_subnets())
+    #
+    # Displays
+    #
+    @property
+    def displayable_subnetworks(self):
+        return self.__to_printable_subnets()
 
-        return self.subnets
+    def print_subnetworks(self):
+        print(self.__to_printable_subnets())
+
+    def print_subnetworks_fancy(self, advanced=False):
+        self.__display_subnets(advanced)
