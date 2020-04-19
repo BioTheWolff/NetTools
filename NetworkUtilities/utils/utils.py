@@ -1,6 +1,6 @@
 from NetworkUtilities.utils.errors import IPv4LimitError, NetworkLimitException
 from NetworkUtilities.utils.ip_class import FourBytesLiteral
-from typing import List, Dict
+from typing import Dict
 
 
 class Utils:

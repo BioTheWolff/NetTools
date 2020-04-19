@@ -85,7 +85,8 @@ class SubnetworkBuilder(NetworkBasic):
         self.submasks_machine_bits = submasks
 
     def __init__(self, subnets_sizes: List[int], starting_ip: str, mask: Union[str, int] = None) -> None:
-        super().__init__(starting_ip, mask)
+        super().init_from_couple(starting_ip, mask)
+
         self.subnets_sizes = sorted(subnets_sizes, reverse=True)
         self.subnets = []
         self.submasks_machine_bits = []

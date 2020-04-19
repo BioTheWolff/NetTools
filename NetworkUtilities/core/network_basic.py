@@ -44,47 +44,42 @@ class NetworkBasic:
         return Utils.netr_to_literal(self.network_range)
 
     #
-    # DUNDERS
+    # POSSIBLE INITS
     #
-    def __init__(self, ip: str, mask: Union[str, int] = None) -> None:
-        """
-        The mask is an optional parameter in case the CIDR is passed into the ip parameter.
-        The CIDR, as in its definition, can only be expressed with the mask length:
-            - 192.168.1.0/24 is a valid CIDR and will be accepted
-            - 192.168.1.0/255.255.255.0 is not a valid CIDR and will raise an Exception
+    def init_from_couple(self, ip: str, mask: Union[str, int]):
+        self.ip = FourBytesLiteral().set_from_string_literal(ip)
+        self.mask = mask
 
-        CIDR informations can be found here: https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing
+        # init "footer". All inits possess this footer to ensure both flow and instance returning
+        self.__flow()
+        return self
 
-        :param ip: The ip in the range
-        :param mask: The mask literal or length
-        :raises:
-            MaskNotProvided: If the mask parameter is None and the ip parameter is not a valid CIDR
-
-        TODO: delete languages option
-        """
-
-        if mask is None:
-            try:
-                ip, mask = ip.split('/')
-                self.ip = FourBytesLiteral().set_from_string_literal(ip)
-                self.mask = mask
-            except ValueError:
-                raise MaskNotProvided(ip)
-        else:
+    def init_from_cidr(self, cidr: str):
+        try:
+            ip, mask = cidr.split('/')
             self.ip = FourBytesLiteral().set_from_string_literal(ip)
             self.mask = mask
+        except ValueError:
+            raise MaskNotProvided(cidr)
 
-        self._verify_provided_types()
-        self.calculate_mask()
-        self._verify_rfc_rules()
+        self.__flow()
+        return self
+
+    #
+    # init flow
+    #
+    def __flow(self):
+        # Flow function is created to simplify code.
+        # All the inits use the same flow, so I found useful to put all of that in one function
+
+        self.__verify_provided_types()
+        self.__calculate_mask()
+        self.__verify_rfc_rules()
 
         self.determine_network_range()
         self.determine_type()
 
-    #
-    # __init__ Tests
-    #
-    def _verify_provided_types(self) -> None:
+    def __verify_provided_types(self) -> None:
         """
         Verifies the provided types (ip, and mask). If a CIDR was passed, the __init__ took care of the spliting into
         respective ip and mask.
@@ -119,7 +114,7 @@ class NetworkBasic:
             else:
                 raise MaskLengthOffBoundsException(self.mask)
 
-    def calculate_mask(self) -> None:
+    def __calculate_mask(self) -> None:
         """
         Calculates the mask from the instance var self.mask
 
@@ -154,7 +149,7 @@ class NetworkBasic:
                             if b != '0':
                                 raise IncorrectMaskException(is_out_allowed=False, value=b, extra=byte + i)
 
-                    length += self._switch_length(concerned, index=True)
+                    length += self.__switch_length(concerned, index=True)
                 else:
                     raise IncorrectMaskException(is_out_allowed=True, value=concerned)
 
@@ -170,7 +165,7 @@ class NetworkBasic:
         finally:
             self.addresses = 2 ** (32 - self.mask_length) - 2
 
-    def _verify_rfc_rules(self) -> None:
+    def __verify_rfc_rules(self) -> None:
         """
         Verifies that both the IP and the mask match RFC standards
 
@@ -212,7 +207,7 @@ class NetworkBasic:
     # Dispatchers
     #   Functions that recieve a complex part excluded from the main function they are called from
     #
-    def _switch_length(self, mask_length: int, index=False) -> int:
+    def __switch_length(self, mask_length: int, index=False) -> int:
         if index:
             return self.mask_allowed_bytes.index(mask_length)
         else:
@@ -221,16 +216,16 @@ class NetworkBasic:
     def mask_length_to_literal(self, mask_length: int) -> str:
         result = ''
         if mask_length <= 8:
-            result = "{}.0.0.0".format(self._switch_length(mask_length))
+            result = "{}.0.0.0".format(self.__switch_length(mask_length))
         elif 8 < mask_length <= 16:
             mask_length -= 8
-            result = "255.{}.0.0".format(self._switch_length(mask_length))
+            result = "255.{}.0.0".format(self.__switch_length(mask_length))
         elif 16 < mask_length <= 24:
             mask_length -= 16
-            result = "255.255.{}.0".format(self._switch_length(mask_length))
+            result = "255.255.{}.0".format(self.__switch_length(mask_length))
         elif 24 < mask_length <= 32:
             mask_length -= 24
-            result = "255.255.255.{}".format(self._switch_length(mask_length))
+            result = "255.255.255.{}".format(self.__switch_length(mask_length))
         return result
 
     #
