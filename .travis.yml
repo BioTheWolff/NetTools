@@ -4,3 +4,4 @@ python:
 os: linux
 script:
 - pip3.7 install .
+- python -m unittest discover -s tests
