@@ -43,8 +43,17 @@ class NetworkBasic:
     def displayable_network_range(self):
         return Utils.netr_to_literal(self.network_range)
 
+    @property
+    def displayable_address_type(self):
+        li = [
+            self.lang_dict['addr_types']['net'],
+            self.lang_dict['addr_types']['mac'],
+            self.lang_dict['addr_types']['bct']
+        ]
+        return li[self.address_type]
+
     #
-    # POSSIBLE INITS
+    # POSSIBLE INITS (built to chain)
     #
     def init_from_couple(self, ip: str, mask: Union[str, int]):
         self.ip = FourBytesLiteral().set_from_string_literal(ip)
@@ -65,6 +74,13 @@ class NetworkBasic:
         self.__flow()
         return self
 
+    def init_from_fbl(self, ip: FourBytesLiteral, mask: FourBytesLiteral):
+        self.ip = ip
+        self.mask = mask
+
+        self.__flow()
+        return self
+
     #
     # init flow
     #
@@ -76,8 +92,8 @@ class NetworkBasic:
         self.__calculate_mask()
         self.__verify_rfc_rules()
 
-        self.determine_network_range()
-        self.determine_type()
+        self.__determine_network_range()
+        self.__determine_type()
 
     def __verify_provided_types(self) -> None:
         """
@@ -160,7 +176,7 @@ class NetworkBasic:
         except AttributeError:
             # The mask is given by its length
             self.mask_length = int(self.mask)
-            self.mask = FourBytesLiteral().set_from_string_literal(self.mask_length_to_literal(self.mask_length))
+            self.mask = FourBytesLiteral().set_from_string_literal(self._mask_length_to_literal(self.mask_length))
 
         finally:
             self.addresses = 2 ** (32 - self.mask_length) - 2
@@ -213,7 +229,7 @@ class NetworkBasic:
         else:
             return self.mask_allowed_bytes[mask_length]
 
-    def mask_length_to_literal(self, mask_length: int) -> str:
+    def _mask_length_to_literal(self, mask_length: int) -> str:
         result = ''
         if mask_length <= 8:
             result = "{}.0.0.0".format(self.__switch_length(mask_length))
@@ -241,7 +257,7 @@ class NetworkBasic:
         print(self.lang_dict['addr_avail'].format(self.addresses))
         print('')
 
-        self.determine_type()
+        self.__determine_type()
         if self.address_type in [0, 1, 2]:
             types = ['net', 'mac', 'bct']
             machine_type = self.lang_dict['addr_types'][types[self.address_type]]
@@ -253,32 +269,27 @@ class NetworkBasic:
     #
     # Main functions
     #
-    def determine_network_range(self, ip: FourBytesLiteral = None, machine_bits: int = None) \
-            -> Dict[str, FourBytesLiteral]:
+    def __determine_network_range(self) -> Dict[str, FourBytesLiteral]:
 
-        ip_ = ip if ip else self.ip
-        mask = [int(i) for i in
-                self.mask_length_to_literal(32 - machine_bits).split('.')
-                ] if machine_bits else self.mask
+        ip = self.ip
+        mask = self.mask
 
         # Network address
         net = FourBytesLiteral()
         for i in range(4):
-            net.append(ip_[i] & mask[i])
+            net.append(ip[i] & mask[i])
 
         # Broadcast address
         bct = FourBytesLiteral()
         for i in range(4):
-            bct.append(ip_[i] | (255 ^ mask[i]))
+            bct.append(ip[i] | (255 ^ mask[i]))
 
         result = {"start": net, "end": bct}
-
-        if ip is None and machine_bits is None:
-            self.network_range = result
+        self.network_range = result
 
         return result
 
-    def determine_type(self) -> int:
+    def __determine_type(self) -> int:
         """
         Determines the type of the given ip.
 
@@ -303,15 +314,12 @@ class NetworkBasic:
 class NetworkBasicDisplayer(NetworkBasic):
 
     def display_range(self, display=False) -> None:
-
         if display is True:
             self._display()
         else:
             print(Utils.netr_to_literal(self.network_range))
 
     def display_type(self, display=False) -> None:
-        self.determine_type()
-
         if display is True:
             self._display()
         elif display is False:

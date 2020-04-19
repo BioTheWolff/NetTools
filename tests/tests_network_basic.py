@@ -4,16 +4,24 @@ import unittest
 import unittest.mock as mock
 
 
+def init_couple(i, m):
+    return nb.NetworkBasic().init_from_couple(i, m)
+
+
+def init_cidr(c):
+    return nb.NetworkBasic().init_from_cidr(c)
+
+
 class NetworkBasicTests(unittest.TestCase):
 
     def _test_range(self, ip, mask=None):
-        r = nb.NetworkBasic(ip, mask).displayable_network_range
+        r = init_couple(ip, mask).displayable_network_range
         self.assertEqual({'start': '192.168.1.0', 'end': '192.168.1.255'}, r)
 
     def test_input_types(self):
 
         # CIDR
-        self._test_range('192.168.1.0/24', None)
+        init_cidr('192.168.1.0/24')
 
         # Mask length
         self._test_range('192.168.1.0', 24)
@@ -22,7 +30,7 @@ class NetworkBasicTests(unittest.TestCase):
         self._test_range('192.168.1.0', '255.255.255.0')
 
         # Mask not provided Exception
-        self.assertRaises(er.MaskNotProvided, lambda: self._test_range('192.168.1.0', None))
+        self.assertRaises(er.MaskNotProvided, lambda: init_cidr('192.168.1.0'))
 
     @staticmethod
     def test_trying_masks_literals():
@@ -58,25 +66,25 @@ class NetworkBasicTests(unittest.TestCase):
         ]
 
         for mask in masks:
-            nb.NetworkBasic('10.0.0.0', mask)
+            init_couple('10.0.0.0', mask)
 
     @staticmethod
     def test_trying_masks_lengths():
 
         for i in range(8, 32):
-            nb.NetworkBasic('10.0.0.0', i)
+            nb.NetworkBasic().init_from_couple('10.0.0.0', i)
 
     #
     # RFC
     #
     def test_rfc_standards(self):
         # Wrong range
-        self.assertRaises(er.RFCRulesIPWrongRangeException, lambda: nb.NetworkBasic('100.168.1.0', 24))
+        self.assertRaises(er.RFCRulesIPWrongRangeException, lambda: init_couple('100.168.1.0', 24))
 
         # Wrong couples
-        self.assertRaises(er.RFCRulesWrongCoupleException, lambda: nb.NetworkBasic('192.168.1.0', 15))
-        self.assertRaises(er.RFCRulesWrongCoupleException, lambda: nb.NetworkBasic('172.16.1.0', 11))
-        self.assertRaises(er.RFCRulesWrongCoupleException, lambda: nb.NetworkBasic('10.0.1.0', 7))
+        self.assertRaises(er.RFCRulesWrongCoupleException, lambda: init_couple('192.168.1.0', 15))
+        self.assertRaises(er.RFCRulesWrongCoupleException, lambda: init_couple('172.16.1.0', 11))
+        self.assertRaises(er.RFCRulesWrongCoupleException, lambda: init_couple('10.0.1.0', 7))
 
     #
     # Errors
@@ -110,19 +118,19 @@ class NetworkBasicTests(unittest.TestCase):
     # Network/Machine caracteristics
     #
     def test_addresses(self):
-        a = nb.NetworkBasic('192.168.1.0', 24).addresses
+        a = init_couple('192.168.1.0', 24).addresses
         self.assertEqual(254, a)
 
     def test_machine_type(self):
 
         # Network address
-        self.assertEqual(nb.NetworkBasic('192.168.1.0', 24).determine_type(), 0)
+        self.assertEqual(init_couple('192.168.1.0', 24).displayable_address_type, "network")
 
         # Computer address
-        self.assertEqual(nb.NetworkBasic('192.168.1.4', 24).determine_type(), 1)
+        self.assertEqual(init_couple('192.168.1.4', 24).displayable_address_type, "computer")
 
         # Broadcast address
-        self.assertEqual(nb.NetworkBasic('192.168.1.255', 24).determine_type(), 2)
+        self.assertEqual(init_couple('192.168.1.255', 24).displayable_address_type, "broadcast")
 
 
 class NetworkBasicDisplays(unittest.TestCase):
@@ -132,7 +140,7 @@ class NetworkBasicDisplays(unittest.TestCase):
     #
     @mock.patch('builtins.print')
     def test_display_range(self, mocked_print):
-        nb.NetworkBasicDisplayer('192.168.1.0', 24).display_range()
+        nb.NetworkBasicDisplayer().init_from_couple('192.168.1.0', 24).display_range()
         self.assertEqual([mock.call({'start': '192.168.1.0', 'end': '192.168.1.255'})], mocked_print.mock_calls)
 
     #
@@ -167,9 +175,7 @@ class NetworkBasicDisplays(unittest.TestCase):
     #
     @staticmethod
     def _prepare_type_display(machine_ip, display=True):
-        inst = nb.NetworkBasicDisplayer(machine_ip, 24)
-        inst.determine_network_range()
-
+        inst = nb.NetworkBasicDisplayer().init_from_couple(machine_ip, 24)
         inst.display_type(display=display)
 
         return inst
@@ -177,7 +183,7 @@ class NetworkBasicDisplays(unittest.TestCase):
     @mock.patch('builtins.print')
     def test_fancy_type_network(self, mocked_print):
         # Network address
-        inst = self._prepare_type_display('192.168.1.0')
+        self._prepare_type_display('192.168.1.0')
         self.assertEqual([
             mock.call("Network:"),
             mock.call("CIDR : 192.168.1.0/24"),
@@ -190,7 +196,7 @@ class NetworkBasicDisplays(unittest.TestCase):
     @mock.patch('builtins.print')
     def test_fancy_type_computer(self, mocked_print):
         # Computer address
-        inst = self._prepare_type_display('192.168.1.4')
+        self._prepare_type_display('192.168.1.4')
         self.assertEqual([
             mock.call("Network:"),
             mock.call("CIDR : 192.168.1.4/24"),
@@ -203,7 +209,7 @@ class NetworkBasicDisplays(unittest.TestCase):
     @mock.patch('builtins.print')
     def test_fancy_type_broadcast(self, mocked_print):
         # Broadcast address
-        inst = self._prepare_type_display('192.168.1.255')
+        self._prepare_type_display('192.168.1.255')
         self.assertEqual([
             mock.call("Network:"),
             mock.call("CIDR : 192.168.1.255/24"),

@@ -32,11 +32,11 @@ def main():
     args = parser.parse_args()
 
     if args.subparser == "network":
-        net = NetworkBasicDisplayer(args.ip, args.mask)
+        net = NetworkBasicDisplayer().init_from_couple(args.ip, args.mask)
         net.display_type(display=args.raw)
 
     elif args.subparser == "subnet":
-        net = SubnetworkBuilder(args.subnets_sizes, args.ip, args.mask)
+        net = SubnetworkBuilder(args.subnets_sizes).init_from_couple(args.ip, args.mask)
         if not args.raw:
             net.print_subnetworks_fancy(advanced=args.advanced)
         else:

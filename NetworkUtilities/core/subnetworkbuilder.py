@@ -1,6 +1,7 @@
 from NetworkUtilities.core.network_basic import NetworkBasic
 from NetworkUtilities.utils.errors import MaskTooSmallException
 from NetworkUtilities.utils.utils import Utils
+from NetworkUtilities.utils.ip_class import FourBytesLiteral
 from typing import Union, List
 
 
@@ -84,15 +85,39 @@ class SubnetworkBuilder(NetworkBasic):
 
         self.submasks_machine_bits = submasks
 
-    def __init__(self, subnets_sizes: List[int], starting_ip: str, mask: Union[str, int] = None) -> None:
-        super().init_from_couple(starting_ip, mask)
-
+    #
+    # Init
+    #
+    def __init__(self, subnets_sizes: List[int]) -> None:
         self.subnets_sizes = sorted(subnets_sizes, reverse=True)
+
+    def init_from_couple(self, ip: str, mask: Union[str, int]):
+        super().init_from_couple(ip, mask)
+
+        self.__subnet_flow()
+        return self
+
+    def init_from_cidr(self, cidr: str):
+        super().init_from_cidr(cidr)
+
+        self.__subnet_flow()
+        return self
+
+    def init_from_fbl(self, ip: FourBytesLiteral, mask: FourBytesLiteral):
+        super().init_from_fbl(ip, mask)
+
+        self.__subnet_flow()
+        return self
+
+    #
+    # Flow
+    #
+    def __subnet_flow(self):
         self.subnets = []
         self.submasks_machine_bits = []
 
         # first, let's check if the provided mask can handle all the addresses requested
-        self.total_network_range = self.determine_network_range()
+        self.total_network_range = self.displayable_network_range
         self.__determine_required_submasks_sizes()
 
         total = 0
@@ -106,16 +131,33 @@ class SubnetworkBuilder(NetworkBasic):
                 power += 1
             raise MaskTooSmallException(self.mask_length, 32 - power)
 
-        self.build_subnets()
+        self.__build_subnets()
 
-    def build_subnets(self) -> None:
+    def __build_subnets(self) -> None:
         start_ip = self.network_range['start']
 
         for i in range(len(self.subnets_sizes)):
             machine_bits = self.submasks_machine_bits[i]
-            result = self.determine_network_range(ip=start_ip, machine_bits=machine_bits)
+            result = self.__determine_subnet_range(ip=start_ip, machine_bits=machine_bits)
             self.subnets.append(result)
             start_ip = Utils.ip_after(result['end'])
+
+    def __determine_subnet_range(self, ip: FourBytesLiteral = None, machine_bits: int = None):
+
+        mask = [int(i) for i in
+                self._mask_length_to_literal(32 - machine_bits).split('.')
+                ]
+
+        net = FourBytesLiteral()
+        for i in range(4):
+            net.append(ip[i] & mask[i])
+
+        # Broadcast address
+        bct = FourBytesLiteral()
+        for i in range(4):
+            bct.append(ip[i] | (255 ^ mask[i]))
+
+        return {"start": net, "end": bct}
 
     #
     # Displays
