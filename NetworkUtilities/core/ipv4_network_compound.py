@@ -7,7 +7,10 @@ from typing import Union, List
 
 class IPv4NetworkCompound(IPv4Network):
     total_network_range = None
-    subnets_sizes, subnets, submasks_machine_bits = None, None, None
+
+    subnets_sizes: List[int] = None
+    subnets: List[IPv4Network] = None
+    submasks_machine_bits: List[int] = None
 
     def __build_graph(self):
         # graph
@@ -53,7 +56,7 @@ class IPv4NetworkCompound(IPv4Network):
         print(self.lang_dict['utils'].format(len(self.subnets), t))
 
         for i in range(len(self.subnets)):
-            literal_sub_netr = Utils.netr_to_literal(self.subnets[i])
+            literal_sub_netr = self.subnets[i].displayable_network_range
 
             if advanced:
                 print(self.lang_dict['sub_addr_advanced'].format(literal_sub_netr['start'],
@@ -71,7 +74,7 @@ class IPv4NetworkCompound(IPv4Network):
             print(graph)
 
     def __to_printable_subnets(self):
-        return [Utils.netr_to_literal(i) for i in self.subnets]
+        return [n.displayable_network_range for n in self.subnets]
 
     def __determine_required_submasks_sizes(self) -> None:
 
@@ -108,10 +111,12 @@ class IPv4NetworkCompound(IPv4Network):
         if isinstance(sizes, int):
             sizes = [sizes]
 
-        if self.subnets_sizes is None:
+        if not self.subnets_sizes:
             self.subnets_sizes = sorted(sizes, reverse=True)
         else:
-            self.subnets_sizes = sorted(self.subnets_sizes.extend(sizes), reverse=True)
+            li = self.subnets_sizes
+            li.extend(sizes)
+            self.subnets_sizes = sorted(li, reverse=True)
 
         self.__subnet_flow()
         return self
@@ -144,10 +149,12 @@ class IPv4NetworkCompound(IPv4Network):
         start_ip = self.network_range['start']
 
         for i in range(len(self.subnets_sizes)):
-            machine_bits = self.submasks_machine_bits[i]
-            result = self.__determine_subnet_range(ip=start_ip, machine_bits=machine_bits)
+            machines_bits = self.submasks_machine_bits[i]
+            mask_literal = FourBytesLiteral().set_eval(Utils.mask_length_to_literal(32 - machines_bits))
+
+            result = IPv4Network().init_from_fbl(start_ip, mask_literal)
             self.subnets.append(result)
-            start_ip = Utils.ip_after(result['end'])
+            start_ip = Utils.ip_after(result.network_range['end'])
 
     @staticmethod
     def __determine_subnet_range(ip: FourBytesLiteral = None, machine_bits: int = None):

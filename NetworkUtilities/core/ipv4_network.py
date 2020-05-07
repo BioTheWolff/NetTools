@@ -109,7 +109,7 @@ class IPv4Network:
 
     def init_from_fbl(self, ip: FourBytesLiteral, mask: FourBytesLiteral):
         self.__ip = ip
-        self.__mask = mask
+        self.__mask = str(mask)
 
         self.__flow()
         return self
