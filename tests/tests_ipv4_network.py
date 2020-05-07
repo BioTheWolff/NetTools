@@ -1,18 +1,17 @@
-import NetworkUtilities.core.network_basic as nb
-import NetworkUtilities.utils.errors as er
 import unittest
+from NetworkUtilities import *
 import unittest.mock as mock
 
 
 def init_couple(i, m):
-    return nb.NetworkBasic().init_from_couple(i, m)
+    return IPv4Network().init_from_couple(i, m)
 
 
 def init_cidr(c):
-    return nb.NetworkBasic().init_from_cidr(c)
+    return IPv4Network().init_from_cidr(c)
 
 
-class NetworkBasicTests(unittest.TestCase):
+class IPv4NetworkTests(unittest.TestCase):
 
     def _test_range(self, ip, mask=None):
         r = init_couple(ip, mask).displayable_network_range
@@ -30,7 +29,7 @@ class NetworkBasicTests(unittest.TestCase):
         self._test_range('192.168.1.0', '255.255.255.0')
 
         # Mask not provided Exception
-        self.assertRaises(er.MaskNotProvided, lambda: init_cidr('192.168.1.0'))
+        self.assertRaises(MaskNotProvided, lambda: init_cidr('192.168.1.0'))
 
     @staticmethod
     def test_trying_masks_literals():
@@ -72,19 +71,19 @@ class NetworkBasicTests(unittest.TestCase):
     def test_trying_masks_lengths():
 
         for i in range(8, 32):
-            nb.NetworkBasic().init_from_couple('10.0.0.0', i)
+            IPv4Network().init_from_couple('10.0.0.0', i)
 
     #
     # RFC
     #
     def test_rfc_standards(self):
         # Wrong range
-        self.assertRaises(er.RFCRulesIPWrongRangeException, lambda: init_couple('100.168.1.0', 24))
+        self.assertRaises(RFCRulesIPWrongRangeException, lambda: init_couple('100.168.1.0', 24))
 
         # Wrong couples
-        self.assertRaises(er.RFCRulesWrongCoupleException, lambda: init_couple('192.168.1.0', 15))
-        self.assertRaises(er.RFCRulesWrongCoupleException, lambda: init_couple('172.16.1.0', 11))
-        self.assertRaises(er.RFCRulesWrongCoupleException, lambda: init_couple('10.0.1.0', 7))
+        self.assertRaises(RFCRulesWrongCoupleException, lambda: init_couple('192.168.1.0', 15))
+        self.assertRaises(RFCRulesWrongCoupleException, lambda: init_couple('172.16.1.0', 11))
+        self.assertRaises(RFCRulesWrongCoupleException, lambda: init_couple('10.0.1.0', 7))
 
     #
     # Errors
@@ -92,27 +91,27 @@ class NetworkBasicTests(unittest.TestCase):
     def test_ip_errors(self):
 
         # Missing one IP byte
-        self.assertRaises(er.BytesLengthException, lambda: self._test_range('192.168.1', 24))
+        self.assertRaises(BytesLengthException, lambda: self._test_range('192.168.1', 24))
 
         # Byte off range
-        self.assertRaises(er.ByteNumberOffLimitsException, lambda: self._test_range('192.168.999.1', 24))
+        self.assertRaises(ByteNumberOffLimitsException, lambda: self._test_range('192.168.999.1', 24))
 
     def test_mask_errors(self):
 
         # Length off bounds
-        self.assertRaises(er.MaskLengthOffBoundsException, lambda: self._test_range('192.168.1.0', 33))
+        self.assertRaises(MaskLengthOffBoundsException, lambda: self._test_range('192.168.1.0', 33))
 
         # Wrong mask literal bytes length
-        self.assertRaises(er.BytesLengthException, lambda: self._test_range('192.168.1.0', '255.255.255'))
+        self.assertRaises(BytesLengthException, lambda: self._test_range('192.168.1.0', '255.255.255'))
 
         # Mask byte off limits
-        self.assertRaises(er.ByteNumberOffLimitsException, lambda: self._test_range('192.168.1.0', '255.255.0.999'))
+        self.assertRaises(ByteNumberOffLimitsException, lambda: self._test_range('192.168.1.0', '255.255.0.999'))
 
         # Incorrect mask literals:
         # Byte not allowed
-        self.assertRaises(er.IncorrectMaskException, lambda: self._test_range('192.168.1.0', '255.255.195.0'))
+        self.assertRaises(IncorrectMaskException, lambda: self._test_range('192.168.1.0', '255.255.195.0'))
         # Non-empty byte after byte < 255
-        self.assertRaises(er.IncorrectMaskException, lambda: self._test_range('192.168.1.0', '255.255.254.255'))
+        self.assertRaises(IncorrectMaskException, lambda: self._test_range('192.168.1.0', '255.255.254.255'))
 
     #
     # Network/Machine caracteristics
@@ -133,14 +132,14 @@ class NetworkBasicTests(unittest.TestCase):
         self.assertEqual(init_couple('192.168.1.255', 24).displayable_address_type, "broadcast")
 
 
-class NetworkBasicDisplays(unittest.TestCase):
+class IPv4NetworkDisplays(unittest.TestCase):
 
     #
     # Ranges display
     #
     @mock.patch('builtins.print')
     def test_display_range(self, mocked_print):
-        nb.NetworkBasicDisplayer().init_from_couple('192.168.1.0', 24).display_range()
+        IPv4NetworkDisplayer().init_from_couple('192.168.1.0', 24).display_range()
         self.assertEqual([mock.call({'start': '192.168.1.0', 'end': '192.168.1.255'})], mocked_print.mock_calls)
 
     #
@@ -175,7 +174,7 @@ class NetworkBasicDisplays(unittest.TestCase):
     #
     @staticmethod
     def _prepare_type_display(machine_ip, display=True):
-        inst = nb.NetworkBasicDisplayer().init_from_couple(machine_ip, 24)
+        inst = IPv4NetworkDisplayer().init_from_couple(machine_ip, 24)
         inst.display_type(display=display)
 
         return inst
