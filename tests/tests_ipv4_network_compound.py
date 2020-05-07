@@ -77,6 +77,24 @@ class IPv4NetworkCompoundTests(unittest.TestCase):
 class IPv4NetworkCompoundDisplays(unittest.TestCase):
     b = 'builtins.print'
 
+    @staticmethod
+    def fill_mock_calls(subnet_num, other=None):
+        s = 's' if subnet_num > 1 else ''
+        li = [
+            m.call("Network:"),
+            m.call("CIDR : 192.168.1.0/18"),
+            m.call("192.168.0.0 - 192.168.63.255"),
+            m.call("16382 total addresses"),
+            m.call(""),
+            m.call(f"{subnet_num} sub-network{s}"),
+            m.call("192.168.0.0 - 192.168.31.255 (8190 addresses)"),
+        ]
+
+        if other is not None:
+            li.extend(other)
+
+        return li
+
     @m.patch(b)
     def test_print(self, mocked_print):
         init_cidr([1500, 5000, 3680], '192.168.1.0/18').print_subnetworks()
@@ -90,31 +108,16 @@ class IPv4NetworkCompoundDisplays(unittest.TestCase):
     def test_print_fancy_only_one_subnet(self, mocked_print):
         init_cidr([5000], '192.168.1.0/18').print_subnetworks_fancy(False)
 
-        self.assertEqual([
-            m.call("Network:"),
-            m.call("CIDR : 192.168.1.0/18"),
-            m.call("192.168.0.0 - 192.168.63.255"),
-            m.call("16382 total addresses"),
-            m.call(""),
-            m.call("1 sub-network"),
-            m.call("192.168.0.0 - 192.168.31.255 (8190 addresses)"),
-        ], mocked_print.mock_calls)
+        self.assertEqual(self.fill_mock_calls(1), mocked_print.mock_calls)
 
     @m.patch(b)
     def test_print_fancy(self, mocked_print):
         init_cidr([1500, 5000, 3680], '192.168.1.0/18').print_subnetworks_fancy(False)
 
-        self.assertEqual([
-                m.call("Network:"),
-                m.call("CIDR : 192.168.1.0/18"),
-                m.call("192.168.0.0 - 192.168.63.255"),
-                m.call("16382 total addresses"),
-                m.call(""),
-                m.call("3 sub-networks"),
-                m.call("192.168.0.0 - 192.168.31.255 (8190 addresses)"),
+        self.assertEqual(self.fill_mock_calls(3, [
                 m.call("192.168.32.0 - 192.168.47.255 (4094 addresses)"),
                 m.call("192.168.48.0 - 192.168.55.255 (2046 addresses)")
-        ], mocked_print.mock_calls)
+        ]), mocked_print.mock_calls)
 
     @m.patch(b)
     def test_print_fancy_advanced(self, mocked_print):

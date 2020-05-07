@@ -38,7 +38,7 @@ class LimitedList:
     def __copy__(self):
         return LimitedList(self.limit).append_all(self.__list)
 
-    def __index__(self, obj: Any):
+    def index(self, obj: Any):
         return self.__list.index(obj)
 
     # NORMAL
@@ -88,7 +88,7 @@ class FourBytesLiteral:
         return self.__bytes.content if self.__bytes else None
 
     def index(self, i: Any) -> int:
-        return self.__bytes.__index__(i) if self.__bytes else None
+        return self.__bytes.index(i) if self.__bytes else None
 
     def append(self, obj: Any) -> None:
         if self.__bytes is None:
@@ -121,7 +121,7 @@ class FourBytesLiteral:
         to_set = value.__copy__()
         # Allow partial filling
         if to_set.length < 4:
-            for i in range(4 - to_set.length):
+            for _ in range(4 - to_set.length):
                 to_set.append(0)
 
         self.__bytes = to_set
@@ -134,7 +134,7 @@ class FourBytesLiteral:
 
         # Allow partial filling
         if len(value) < 4:
-            for i in range(4 - len(value)):
+            for _ in range(4 - len(value)):
                 value.append(0)
 
         self.__bytes = LimitedList(4).append_all(value)
