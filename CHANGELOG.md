@@ -6,7 +6,8 @@ The vars are now gettable by properties of the same name
 - Simplified the insides of the IPv4Network class, using Utils as a support for all static things
 not required in the class
 - The SubnetworkBuilder class became IPv4NetworkCompound. Both its objective and the way it works have been
-changed
+changed: it now works with a list of subnetworks expressed in IPv4Network classes instead of string literals
+- You can now add one or several new networks to the compound by passing the number of required addresses for it
 
 ## v1.2
 - Split class instancing and real init, and created functions accordingly

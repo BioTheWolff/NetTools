@@ -1,5 +1,6 @@
 import NetworkUtilities.core.ipv4_network_compound as sb
 import NetworkUtilities.utils.errors as e
+import NetworkUtilities.utils.ip_class as i
 import unittest
 import unittest.mock as m
 
@@ -8,7 +9,20 @@ def init_cidr(sizes, cidr):
     return sb.IPv4NetworkCompound().init_from_cidr(cidr).add_from_addresses(sizes)
 
 
-class SubnetBuilderTests(unittest.TestCase):
+class IPv4NetworkCompoundTests(unittest.TestCase):
+
+    def test_inits(self):
+        ip = i.FourBytesLiteral().set_from_string_literal('192.168.1.0')
+        mask = i.FourBytesLiteral().set_from_string_literal('255.255.254.0')
+        expected = [
+            {'start': '192.168.0.0', "end": '192.168.0.255'}
+        ]
+
+        test1 = sb.IPv4NetworkCompound().init_from_fbl(ip, mask).add_from_addresses(250)
+        test2 = sb.IPv4NetworkCompound().init_from_couple(str(ip), str(mask)).add_from_addresses(250)
+
+        self.assertEqual(expected, test1.displayable_subnetworks)
+        self.assertEqual(expected, test2.displayable_subnetworks)
 
     def test_subnet_sizes(self):
         inst = init_cidr([1500, 5000, 3680], '192.168.1.0/18')
@@ -22,8 +36,47 @@ class SubnetBuilderTests(unittest.TestCase):
     def test_exception_mask_too_small(self):
         self.assertRaises(e.MaskTooSmallException, lambda: init_cidr([200, 450], '192.168.1.4/24'))
 
+    def test_insertion_list(self):
+        test = init_cidr([250, 250], '192.168.0.0/18')
+        expected = [
+            {'start': '192.168.0.0', "end": '192.168.0.255'},
+            {'start': '192.168.1.0', "end": '192.168.1.255'}
+        ]
 
-class SubnetBuilderDisplays(unittest.TestCase):
+        self.assertEqual(expected, test.displayable_subnetworks)
+
+    def test_insertion_int(self):
+        test = init_cidr(250, '192.168.0.0/18')
+        test.add_from_addresses(250)
+        expected = [
+            {'start': '192.168.0.0', "end": '192.168.0.255'},
+            {'start': '192.168.1.0', "end": '192.168.1.255'}
+        ]
+
+        self.assertEqual(expected, test.displayable_subnetworks)
+
+    def test_deleting_subnet(self):
+        test = init_cidr([250, 250], '192.168.0.0/18')
+        test.remove_subnet(0)
+        expected = [
+            {'start': '192.168.1.0', "end": '192.168.1.255'}
+        ]
+
+        self.assertEqual(expected, test.displayable_subnetworks)
+
+    def test_property_activated(self):
+        test = sb.IPv4NetworkCompound().init_from_cidr('192.168.1.0/23')
+        self.assertEqual(False, test.activated)
+
+        test.add_from_addresses([250])
+        self.assertEqual(True, test.activated)
+
+    def test_property_subnets(self):
+        test = sb.IPv4NetworkCompound().init_from_cidr('192.168.1.0/24')
+        self.assertEqual(None, test.subnets)
+
+
+class IPv4NetworkCompoundDisplays(unittest.TestCase):
     b = 'builtins.print'
 
     @m.patch(b)

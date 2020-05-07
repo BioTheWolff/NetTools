@@ -9,7 +9,7 @@ def main():
 
     # network parser
     network_parser = subparsers.add_parser("network", help="Module to determine a network range and type of an IP",
-                                           aliases="net")
+                                           aliases=["net"])
     network_parser.add_argument("ip", help="One IP in the network")
     network_parser.add_argument("mask", help="The network mask. You can provide either the mask or its length")
 
@@ -17,7 +17,7 @@ def main():
                                 action="store_false")
 
     # subnetbuilder parser
-    subnetbuilder = subparsers.add_parser("subnet", help="Module to determine subnetworks ranges")
+    subnetbuilder = subparsers.add_parser("builder", help="Module to determine subnetworks ranges", aliases=['snb'])
     subnetbuilder.add_argument("ip", help="One IP in the network")
     subnetbuilder.add_argument("mask", help="The network mask. You can provide either the mask or its length")
     subnetbuilder.add_argument("subnets_sizes", help="Subnetworks sizes. Give the number of addresses you want to see "
@@ -31,12 +31,12 @@ def main():
 
     args = parser.parse_args()
 
-    if args.subparser == "network":
+    if args.subparser in ["network", "net"]:
         net = IPv4NetworkDisplayer().init_from_couple(args.ip, args.mask)
         net.display_type(display=args.raw)
 
-    elif args.subparser == "subnet":
-        net = IPv4NetworkCompound(args.subnets_sizes).init_from_couple(args.ip, args.mask)
+    elif args.subparser in ["subnet", "snb"]:
+        net = IPv4NetworkCompound().init_from_couple(args.ip, args.mask).add_from_addresses(args.subnets_sizes)
         if not args.raw:
             net.print_subnetworks_fancy(advanced=args.advanced)
         else:
