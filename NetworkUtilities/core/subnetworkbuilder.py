@@ -1,4 +1,4 @@
-from NetworkUtilities.core.network_basic import IPv4Network
+from NetworkUtilities.core.ipv4_network import IPv4Network
 from NetworkUtilities.utils.errors import MaskTooSmallException
 from NetworkUtilities.utils.utils import Utils
 from NetworkUtilities.utils.ip_class import FourBytesLiteral

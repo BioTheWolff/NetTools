@@ -1,5 +1,5 @@
 import argparse
-from NetworkUtilities.core.network_basic import IPv4NetworkDisplayer
+from NetworkUtilities.core.ipv4_network import IPv4NetworkDisplayer
 from NetworkUtilities.core.subnetworkbuilder import SubnetworkBuilder
 
 

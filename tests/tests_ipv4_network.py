@@ -1,4 +1,4 @@
-import NetworkUtilities.core.network_basic as nb
+import NetworkUtilities.core.ipv4_network as nb
 import NetworkUtilities.utils.errors as er
 import unittest
 import unittest.mock as mock
