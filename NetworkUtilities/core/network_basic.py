@@ -7,18 +7,20 @@ from NetworkUtilities.utils.ip_class import FourBytesLiteral
 from typing import Union, Dict
 
 
-class NetworkBasic:
+class IPv4Network:
     ip: FourBytesLiteral = None
     mask: Union[FourBytesLiteral, str] = None
+
     address_type = None
     mask_length, addresses = 0, 0
+
     rfc_current_range, rfc_masks = None, [16, 12, 8]
     rfc_allowed_ranges = [
         [192, [168, 168]],
         [172, [16, 31]],
         [10, [0, 255]]
     ]
-    mask_allowed_bytes = [0, 128, 192, 224, 240, 248, 252, 254, 255]
+
     network_range: Dict[str, FourBytesLiteral] = {}
     lang_dict = {
         'network': "Network:",
@@ -156,7 +158,7 @@ class NetworkBasic:
             for byte in range(4):
                 concerned = int(temp[byte])
                 # We check that the byte is in the awaited bytes list
-                if concerned in self.mask_allowed_bytes:
+                if concerned in Utils.mask_allowed_bytes:
                     # If mask contains a 0, we check that each next byte
                     # contains only a 0, else we raise an IncorrectMaskException
                     if concerned < 255:
@@ -165,7 +167,7 @@ class NetworkBasic:
                             if b != '0':
                                 raise IncorrectMaskException(is_out_allowed=False, value=b, extra=byte + i)
 
-                    length += self.__switch_length(concerned, index=True)
+                    length += Utils.switch_length(concerned, index=True)
                 else:
                     raise IncorrectMaskException(is_out_allowed=True, value=concerned)
 
@@ -176,7 +178,7 @@ class NetworkBasic:
         except AttributeError:
             # The mask is given by its length
             self.mask_length = int(self.mask)
-            self.mask = FourBytesLiteral().set_from_string_literal(self._mask_length_to_literal(self.mask_length))
+            self.mask = FourBytesLiteral().set_from_string_literal(Utils.mask_length_to_literal(self.mask_length))
 
         finally:
             self.addresses = 2 ** (32 - self.mask_length) - 2
@@ -218,31 +220,6 @@ class NetworkBasic:
             allowed_mask = self.rfc_masks[i]
             if (int(ip[0]) == allowed) and (mask < allowed_mask):
                 raise RFCRulesWrongCoupleException(ip[0], ip[1], allowed_mask, mask)
-
-    #
-    # Dispatchers
-    #   Functions that recieve a complex part excluded from the main function they are called from
-    #
-    def __switch_length(self, mask_length: int, index=False) -> int:
-        if index:
-            return self.mask_allowed_bytes.index(mask_length)
-        else:
-            return self.mask_allowed_bytes[mask_length]
-
-    def _mask_length_to_literal(self, mask_length: int) -> str:
-        result = ''
-        if mask_length <= 8:
-            result = "{}.0.0.0".format(self.__switch_length(mask_length))
-        elif 8 < mask_length <= 16:
-            mask_length -= 8
-            result = "255.{}.0.0".format(self.__switch_length(mask_length))
-        elif 16 < mask_length <= 24:
-            mask_length -= 16
-            result = "255.255.{}.0".format(self.__switch_length(mask_length))
-        elif 24 < mask_length <= 32:
-            mask_length -= 24
-            result = "255.255.255.{}".format(self.__switch_length(mask_length))
-        return result
 
     #
     # Template for child classes
@@ -311,7 +288,7 @@ class NetworkBasic:
         return self.address_type
 
 
-class NetworkBasicDisplayer(NetworkBasic):
+class IPv4NetworkDisplayer(IPv4Network):
 
     def display_range(self, display=False) -> None:
         if display is True:

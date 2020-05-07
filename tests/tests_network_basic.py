@@ -5,11 +5,11 @@ import unittest.mock as mock
 
 
 def init_couple(i, m):
-    return nb.NetworkBasic().init_from_couple(i, m)
+    return nb.IPv4Network().init_from_couple(i, m)
 
 
 def init_cidr(c):
-    return nb.NetworkBasic().init_from_cidr(c)
+    return nb.IPv4Network().init_from_cidr(c)
 
 
 class NetworkBasicTests(unittest.TestCase):
@@ -72,7 +72,7 @@ class NetworkBasicTests(unittest.TestCase):
     def test_trying_masks_lengths():
 
         for i in range(8, 32):
-            nb.NetworkBasic().init_from_couple('10.0.0.0', i)
+            nb.IPv4Network().init_from_couple('10.0.0.0', i)
 
     #
     # RFC
@@ -140,7 +140,7 @@ class NetworkBasicDisplays(unittest.TestCase):
     #
     @mock.patch('builtins.print')
     def test_display_range(self, mocked_print):
-        nb.NetworkBasicDisplayer().init_from_couple('192.168.1.0', 24).display_range()
+        nb.IPv4NetworkDisplayer().init_from_couple('192.168.1.0', 24).display_range()
         self.assertEqual([mock.call({'start': '192.168.1.0', 'end': '192.168.1.255'})], mocked_print.mock_calls)
 
     #
@@ -175,7 +175,7 @@ class NetworkBasicDisplays(unittest.TestCase):
     #
     @staticmethod
     def _prepare_type_display(machine_ip, display=True):
-        inst = nb.NetworkBasicDisplayer().init_from_couple(machine_ip, 24)
+        inst = nb.IPv4NetworkDisplayer().init_from_couple(machine_ip, 24)
         inst.display_type(display=display)
 
         return inst

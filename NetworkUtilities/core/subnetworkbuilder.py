@@ -1,11 +1,11 @@
-from NetworkUtilities.core.network_basic import NetworkBasic
+from NetworkUtilities.core.network_basic import IPv4Network
 from NetworkUtilities.utils.errors import MaskTooSmallException
 from NetworkUtilities.utils.utils import Utils
 from NetworkUtilities.utils.ip_class import FourBytesLiteral
 from typing import Union, List
 
 
-class SubnetworkBuilder(NetworkBasic):
+class SubnetworkBuilder(IPv4Network):
     total_network_range = None
     subnets_sizes, subnets, submasks_machine_bits = None, None, None
 
@@ -142,10 +142,11 @@ class SubnetworkBuilder(NetworkBasic):
             self.subnets.append(result)
             start_ip = Utils.ip_after(result['end'])
 
-    def __determine_subnet_range(self, ip: FourBytesLiteral = None, machine_bits: int = None):
+    @staticmethod
+    def __determine_subnet_range(ip: FourBytesLiteral = None, machine_bits: int = None):
 
         mask = [int(i) for i in
-                self._mask_length_to_literal(32 - machine_bits).split('.')
+                Utils.mask_length_to_literal(32 - machine_bits).split('.')
                 ]
 
         net = FourBytesLiteral()

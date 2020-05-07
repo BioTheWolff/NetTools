@@ -1,5 +1,5 @@
 import argparse
-from NetworkUtilities.core.network_basic import NetworkBasicDisplayer
+from NetworkUtilities.core.network_basic import IPv4NetworkDisplayer
 from NetworkUtilities.core.subnetworkbuilder import SubnetworkBuilder
 
 
@@ -32,7 +32,7 @@ def main():
     args = parser.parse_args()
 
     if args.subparser == "network":
-        net = NetworkBasicDisplayer().init_from_couple(args.ip, args.mask)
+        net = IPv4NetworkDisplayer().init_from_couple(args.ip, args.mask)
         net.display_type(display=args.raw)
 
     elif args.subparser == "subnet":
