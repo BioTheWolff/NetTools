@@ -8,20 +8,17 @@ from typing import Union, Dict
 
 
 class IPv4Network:
-    ip: FourBytesLiteral = None
-    mask: Union[FourBytesLiteral, str] = None
+    __ip: FourBytesLiteral = None
+    __mask: Union[FourBytesLiteral, str] = None
+    __network_range: Dict[str, FourBytesLiteral] = {}
 
-    address_type = None
-    mask_length, addresses = 0, 0
+    __activated = False  # If IPv4Network has been initialized
 
-    rfc_current_range, rfc_masks = None, [16, 12, 8]
-    rfc_allowed_ranges = [
-        [192, [168, 168]],
-        [172, [16, 31]],
-        [10, [0, 255]]
-    ]
+    __address_type: int = None
+    __mask_length, __addresses = 0, 0
 
-    network_range: Dict[str, FourBytesLiteral] = {}
+    __rfc_current_range = None
+
     lang_dict = {
         'network': "Network:",
         'cidr': "CIDR : {}/{}",
@@ -41,9 +38,43 @@ class IPv4Network:
         'net_usage': "Network usage:"
     }
 
+    #
+    # Read-only accesses properties
+    #
+    @property
+    def ip(self):
+        return self.__ip if self.__activated else None
+
+    @property
+    def mask(self):
+        return self.__mask if self.__activated else None
+
+    @property
+    def mask_length(self):
+        return self.__mask_length if self.__activated else None
+
+    @property
+    def network_range(self):
+        return self.__network_range if self.__activated else None
+
+    @property
+    def addresses(self):
+        return self.__addresses if self.__activated else None
+
+    @property
+    def address_type(self):
+        return self.__address_type if self.__activated else None
+
+    @property
+    def activated(self):
+        return self.__activated
+
+    #
+    # Displayable adaptation properties
+    #
     @property
     def displayable_network_range(self):
-        return Utils.netr_to_literal(self.network_range)
+        return Utils.netr_to_literal(self.__network_range)
 
     @property
     def displayable_address_type(self):
@@ -52,14 +83,14 @@ class IPv4Network:
             self.lang_dict['addr_types']['mac'],
             self.lang_dict['addr_types']['bct']
         ]
-        return li[self.address_type]
+        return li[self.__address_type]
 
     #
     # POSSIBLE INITS (built to chain)
     #
     def init_from_couple(self, ip: str, mask: Union[str, int]):
-        self.ip = FourBytesLiteral().set_from_string_literal(ip)
-        self.mask = mask
+        self.__ip = FourBytesLiteral().set_from_string_literal(ip)
+        self.__mask = mask
 
         # init "footer". All inits possess this footer to ensure both flow and instance returning
         self.__flow()
@@ -68,8 +99,8 @@ class IPv4Network:
     def init_from_cidr(self, cidr: str):
         try:
             ip, mask = cidr.split('/')
-            self.ip = FourBytesLiteral().set_from_string_literal(ip)
-            self.mask = mask
+            self.__ip = FourBytesLiteral().set_from_string_literal(ip)
+            self.__mask = mask
         except ValueError:
             raise MaskNotProvided(cidr)
 
@@ -77,8 +108,8 @@ class IPv4Network:
         return self
 
     def init_from_fbl(self, ip: FourBytesLiteral, mask: FourBytesLiteral):
-        self.ip = ip
-        self.mask = mask
+        self.__ip = ip
+        self.__mask = mask
 
         self.__flow()
         return self
@@ -96,6 +127,8 @@ class IPv4Network:
 
         self.__determine_network_range()
         self.__determine_type()
+
+        self.__activated = True
 
     def __verify_provided_types(self) -> None:
         """
@@ -118,7 +151,7 @@ class IPv4Network:
                 raise ByteNumberOffLimitsException('IP', e, temp.index(e))
 
         try:
-            temp = self.mask.split('.')
+            temp = self.__mask.split('.')
             if len(temp) == 1:
                 raise AttributeError()
             if len(temp) != 4:
@@ -127,10 +160,10 @@ class IPv4Network:
                 if not (0 <= int(e) <= 255):
                     raise ByteNumberOffLimitsException('Mask', e, temp.index(e))
         except (AttributeError, ValueError):
-            if 0 <= int(self.mask) <= 32:
+            if 0 <= int(self.__mask) <= 32:
                 return
             else:
-                raise MaskLengthOffBoundsException(self.mask)
+                raise MaskLengthOffBoundsException(self.__mask)
 
     def __calculate_mask(self) -> None:
         """
@@ -147,7 +180,7 @@ class IPv4Network:
 
         try:
             # The mask is given by its literal
-            temp = self.mask.split('.')
+            temp = self.__mask.split('.')
             if len(temp) == 1:
                 # If the mask is given by its length
                 # Use AttributeError raise to switch to the except case
@@ -172,16 +205,16 @@ class IPv4Network:
                     raise IncorrectMaskException(is_out_allowed=True, value=concerned)
 
             # Stock the length
-            self.mask_length = length
-            self.mask = FourBytesLiteral().set_from_string_literal(".".join(temp))
+            self.__mask_length = length
+            self.__mask = FourBytesLiteral().set_from_string_literal(".".join(temp))
 
         except AttributeError:
             # The mask is given by its length
-            self.mask_length = int(self.mask)
-            self.mask = FourBytesLiteral().set_from_string_literal(Utils.mask_length_to_literal(self.mask_length))
+            self.__mask_length = int(self.__mask)
+            self.__mask = FourBytesLiteral().set_from_string_literal(Utils.mask_length_to_literal(self.__mask_length))
 
         finally:
-            self.addresses = 2 ** (32 - self.mask_length) - 2
+            self.__addresses = 2 ** (32 - self.__mask_length) - 2
 
     def __verify_rfc_rules(self) -> None:
         """
@@ -200,24 +233,24 @@ class IPv4Network:
         def _check(content):
             ip_test = False
             for i_ in range(3):
-                if (int(content[0]) == self.rfc_allowed_ranges[i_][0]) and \
-                        (self.rfc_allowed_ranges[i_][1][0] <= int(content[1]) <= self.rfc_allowed_ranges[i_][1][1]):
+                if (int(content[0]) == Utils.rfc_allowed_ranges[i_][0]) and \
+                        (Utils.rfc_allowed_ranges[i_][1][0] <= int(content[1]) <= Utils.rfc_allowed_ranges[i_][1][1]):
                     ip_test = True
-                    self.rfc_current_range = i_
+                    self.__rfc_current_range = i_
 
             if ip_test is False:
                 raise RFCRulesIPWrongRangeException(ip[0], ip[1])
 
         ip = self.ip
-        mask = self.mask_length
+        mask = self.__mask_length
 
         # We check that ip respects RFC standards
         _check(ip)
 
         # We then check that provided mask corresponds to RFC standards
         for i in range(3):
-            allowed = self.rfc_allowed_ranges[i][0]
-            allowed_mask = self.rfc_masks[i]
+            allowed = Utils.rfc_allowed_ranges[i][0]
+            allowed_mask = Utils.rfc_masks[i]
             if (int(ip[0]) == allowed) and (mask < allowed_mask):
                 raise RFCRulesWrongCoupleException(ip[0], ip[1], allowed_mask, mask)
 
@@ -229,15 +262,15 @@ class IPv4Network:
         literal_ip = str(self.ip)
 
         print(self.lang_dict['network'])
-        print(self.lang_dict['cidr'].format(literal_ip, self.mask_length))
+        print(self.lang_dict['cidr'].format(literal_ip, self.__mask_length))
         print("{} - {}".format(literal_netr['start'], literal_netr['end']))
-        print(self.lang_dict['addr_avail'].format(self.addresses))
+        print(self.lang_dict['addr_avail'].format(self.__addresses))
         print('')
 
         self.__determine_type()
-        if self.address_type in [0, 1, 2]:
+        if self.__address_type in [0, 1, 2]:
             types = ['net', 'mac', 'bct']
-            machine_type = self.lang_dict['addr_types'][types[self.address_type]]
+            machine_type = self.lang_dict['addr_types'][types[self.__address_type]]
         else:
             raise Exception("Given address type other than expected address types")
 
@@ -249,7 +282,7 @@ class IPv4Network:
     def __determine_network_range(self) -> Dict[str, FourBytesLiteral]:
 
         ip = self.ip
-        mask = self.mask
+        mask = self.__mask
 
         # Network address
         net = FourBytesLiteral()
@@ -262,7 +295,7 @@ class IPv4Network:
             bct.append(ip[i] | (255 ^ mask[i]))
 
         result = {"start": net, "end": bct}
-        self.network_range = result
+        self.__network_range = result
 
         return result
 
@@ -279,13 +312,13 @@ class IPv4Network:
         res = self.displayable_network_range
 
         if res['start'] == str(self.ip):
-            self.address_type = 0
+            self.__address_type = 0
         elif res['end'] == str(self.ip):
-            self.address_type = 2
+            self.__address_type = 2
         else:
-            self.address_type = 1
+            self.__address_type = 1
 
-        return self.address_type
+        return self.__address_type
 
 
 class IPv4NetworkDisplayer(IPv4Network):
@@ -294,21 +327,21 @@ class IPv4NetworkDisplayer(IPv4Network):
         if display is True:
             self._display()
         else:
-            print(Utils.netr_to_literal(self.network_range))
+            print(Utils.netr_to_literal(self.__network_range))
 
     def display_type(self, display=False) -> None:
         if display is True:
             self._display()
         elif display is False:
-            if self.address_type == 0:
+            if self.__address_type == 0:
                 machine_type = self.lang_dict['addr_types']['net']
-            elif self.address_type == 1:
+            elif self.__address_type == 1:
                 machine_type = self.lang_dict['addr_types']['mac']
-            elif self.address_type == 2:
+            elif self.__address_type == 2:
                 machine_type = self.lang_dict['addr_types']['bct']
             else:
                 machine_type = None
 
-            temp = Utils.netr_to_literal(self.network_range)
+            temp = Utils.netr_to_literal(self.__network_range)
             temp['address_type'] = machine_type
             print(temp)

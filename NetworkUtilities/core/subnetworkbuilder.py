@@ -14,7 +14,7 @@ class SubnetworkBuilder(IPv4Network):
         occupied = 0
         for i in range(len(self.submasks_machine_bits)):
             occupied += 2 ** self.submasks_machine_bits[i] - 2
-        percentage = round((occupied / self.addresses) * 100)
+        percentage = round((occupied / self.__addresses) * 100)
         graph = '['
         current = 0
         for i in range(20):
@@ -36,19 +36,19 @@ class SubnetworkBuilder(IPv4Network):
 
         occupied, graph, t = self.__build_graph()
 
-        literal_ip = Utils.to_literal(self.ip)
+        literal_ip = Utils.to_literal(self.__ip)
         literal_netr = Utils.netr_to_literal(self.total_network_range)
 
         print(self.lang_dict['network'])
         if advanced is True:
-            print(self.lang_dict['cidr_adv'].format(literal_ip, self.mask_length))
+            print(self.lang_dict['cidr_adv'].format(literal_ip, self.__mask_length))
         else:
-            print(self.lang_dict['cidr'].format(literal_ip, self.mask_length))
+            print(self.lang_dict['cidr'].format(literal_ip, self.__mask_length))
         print("{} - {}".format(literal_netr['start'], literal_netr['end']))
         if advanced is True:
-            print(self.lang_dict['addr_avail_advanced'].format(occupied, self.addresses))
+            print(self.lang_dict['addr_avail_advanced'].format(occupied, self.__addresses))
         else:
-            print(self.lang_dict['addr_avail'].format(self.addresses))
+            print(self.lang_dict['addr_avail'].format(self.__addresses))
         print('')
         print(self.lang_dict['utils'].format(len(self.subnets), t))
 
@@ -125,16 +125,16 @@ class SubnetworkBuilder(IPv4Network):
         for i in range(len(self.submasks_machine_bits)):
             total += 2 ** self.submasks_machine_bits[i]
 
-        if self.addresses < total:
+        if self.__addresses < total:
             power = 1
             while total > 2 ** power:
                 power += 1
-            raise MaskTooSmallException(self.mask_length, 32 - power)
+            raise MaskTooSmallException(self.__mask_length, 32 - power)
 
         self.__build_subnets()
 
     def __build_subnets(self) -> None:
-        start_ip = self.network_range['start']
+        start_ip = self.__network_range['start']
 
         for i in range(len(self.subnets_sizes)):
             machine_bits = self.submasks_machine_bits[i]

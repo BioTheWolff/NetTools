@@ -6,6 +6,12 @@ from typing import Dict
 class Utils:
 
     mask_allowed_bytes = [0, 128, 192, 224, 240, 248, 252, 254, 255]
+    rfc_allowed_ranges = [
+        [192, [168, 168]],
+        [172, [16, 31]],
+        [10, [0, 255]]
+    ]
+    rfc_masks = [16, 12, 8]
 
     @staticmethod
     def switch_length(mask_length: int, index=False) -> int:
