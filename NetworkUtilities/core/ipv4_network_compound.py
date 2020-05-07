@@ -88,23 +88,30 @@ class IPv4NetworkCompound(IPv4Network):
     #
     # Init
     #
-    def __init__(self, subnets_sizes: List[int]) -> None:
-        self.subnets_sizes = sorted(subnets_sizes, reverse=True)
 
     def init_from_couple(self, ip: str, mask: Union[str, int]):
         super().init_from_couple(ip, mask)
-
-        self.__subnet_flow()
         return self
 
     def init_from_cidr(self, cidr: str):
         super().init_from_cidr(cidr)
-
-        self.__subnet_flow()
         return self
 
     def init_from_fbl(self, ip: FourBytesLiteral, mask: FourBytesLiteral):
         super().init_from_fbl(ip, mask)
+        return self
+
+    #
+    # Fill compound
+    #
+    def add_from_addresses(self, sizes: Union[List, int]):
+        if isinstance(sizes, int):
+            sizes = [sizes]
+
+        if self.subnets_sizes is None:
+            self.subnets_sizes = sorted(sizes, reverse=True)
+        else:
+            self.subnets_sizes = sorted(self.subnets_sizes.extend(sizes), reverse=True)
 
         self.__subnet_flow()
         return self

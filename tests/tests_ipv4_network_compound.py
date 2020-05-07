@@ -5,7 +5,7 @@ import unittest.mock as m
 
 
 def init_cidr(sizes, cidr):
-    return sb.IPv4NetworkCompound(sizes).init_from_cidr(cidr)
+    return sb.IPv4NetworkCompound().init_from_cidr(cidr).add_from_addresses(sizes)
 
 
 class SubnetBuilderTests(unittest.TestCase):
