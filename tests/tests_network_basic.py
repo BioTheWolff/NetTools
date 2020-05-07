@@ -12,7 +12,7 @@ def init_cidr(c):
     return nb.IPv4Network().init_from_cidr(c)
 
 
-class NetworkBasicTests(unittest.TestCase):
+class IPv4NetworkTests(unittest.TestCase):
 
     def _test_range(self, ip, mask=None):
         r = init_couple(ip, mask).displayable_network_range
@@ -133,7 +133,7 @@ class NetworkBasicTests(unittest.TestCase):
         self.assertEqual(init_couple('192.168.1.255', 24).displayable_address_type, "broadcast")
 
 
-class NetworkBasicDisplays(unittest.TestCase):
+class IPv4NetworkDisplays(unittest.TestCase):
 
     #
     # Ranges display

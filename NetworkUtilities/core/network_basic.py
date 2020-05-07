@@ -143,7 +143,7 @@ class IPv4Network:
             MaskLengthOffBoundsException: If the mask length is not between 0 and 32
         """
 
-        temp = self.ip
+        temp = self.__ip
         if len(temp) != 4:
             raise BytesLengthException('IP', len(temp))
         for e in temp:
@@ -167,7 +167,7 @@ class IPv4Network:
 
     def __calculate_mask(self) -> None:
         """
-        Calculates the mask from the instance var self.mask
+        Calculates the mask from the instance var self.__mask
 
         If the mask is a literal mask (i.e. '255.255.255.0'), the try case is concerned.
         If instead, the user gave the mask length, we make sure to raise an AttributeError to switch to the
@@ -241,7 +241,7 @@ class IPv4Network:
             if ip_test is False:
                 raise RFCRulesIPWrongRangeException(ip[0], ip[1])
 
-        ip = self.ip
+        ip = self.__ip
         mask = self.__mask_length
 
         # We check that ip respects RFC standards
@@ -259,7 +259,7 @@ class IPv4Network:
     #
     def _display(self):
         literal_netr = self.displayable_network_range
-        literal_ip = str(self.ip)
+        literal_ip = str(self.__ip)
 
         print(self.lang_dict['network'])
         print(self.lang_dict['cidr'].format(literal_ip, self.__mask_length))
@@ -281,7 +281,7 @@ class IPv4Network:
     #
     def __determine_network_range(self) -> Dict[str, FourBytesLiteral]:
 
-        ip = self.ip
+        ip = self.__ip
         mask = self.__mask
 
         # Network address
@@ -311,9 +311,9 @@ class IPv4Network:
 
         res = self.displayable_network_range
 
-        if res['start'] == str(self.ip):
+        if res['start'] == str(self.__ip):
             self.__address_type = 0
-        elif res['end'] == str(self.ip):
+        elif res['end'] == str(self.__ip):
             self.__address_type = 2
         else:
             self.__address_type = 1
@@ -327,21 +327,21 @@ class IPv4NetworkDisplayer(IPv4Network):
         if display is True:
             self._display()
         else:
-            print(Utils.netr_to_literal(self.__network_range))
+            print(Utils.netr_to_literal(self.network_range))
 
     def display_type(self, display=False) -> None:
         if display is True:
             self._display()
         elif display is False:
-            if self.__address_type == 0:
+            if self.address_type == 0:
                 machine_type = self.lang_dict['addr_types']['net']
-            elif self.__address_type == 1:
+            elif self.address_type == 1:
                 machine_type = self.lang_dict['addr_types']['mac']
-            elif self.__address_type == 2:
+            elif self.address_type == 2:
                 machine_type = self.lang_dict['addr_types']['bct']
             else:
                 machine_type = None
 
-            temp = Utils.netr_to_literal(self.__network_range)
+            temp = Utils.netr_to_literal(self.network_range)
             temp['address_type'] = machine_type
             print(temp)
