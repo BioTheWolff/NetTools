@@ -1,11 +1,11 @@
-import NetworkUtilities.core.subnetworkbuilder as sb
+import NetworkUtilities.core.ipv4_network_compound as sb
 import NetworkUtilities.utils.errors as e
 import unittest
 import unittest.mock as m
 
 
 def init_cidr(sizes, cidr):
-    return sb.SubnetworkBuilder(sizes).init_from_cidr(cidr)
+    return sb.IPv4NetworkCompound(sizes).init_from_cidr(cidr)
 
 
 class SubnetBuilderTests(unittest.TestCase):

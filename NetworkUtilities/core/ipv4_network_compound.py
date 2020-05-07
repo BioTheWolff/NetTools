@@ -5,7 +5,7 @@ from NetworkUtilities.utils.ip_class import FourBytesLiteral
 from typing import Union, List
 
 
-class SubnetworkBuilder(IPv4Network):
+class IPv4NetworkCompound(IPv4Network):
     total_network_range = None
     subnets_sizes, subnets, submasks_machine_bits = None, None, None
 

@@ -1,6 +1,6 @@
 import argparse
 from NetworkUtilities.core.ipv4_network import IPv4NetworkDisplayer
-from NetworkUtilities.core.subnetworkbuilder import SubnetworkBuilder
+from NetworkUtilities.core.ipv4_network_compound import IPv4NetworkCompound
 
 
 def main():
@@ -36,7 +36,7 @@ def main():
         net.display_type(display=args.raw)
 
     elif args.subparser == "subnet":
-        net = SubnetworkBuilder(args.subnets_sizes).init_from_couple(args.ip, args.mask)
+        net = IPv4NetworkCompound(args.subnets_sizes).init_from_couple(args.ip, args.mask)
         if not args.raw:
             net.print_subnetworks_fancy(advanced=args.advanced)
         else:
