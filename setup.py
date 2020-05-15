@@ -53,14 +53,24 @@ def write_version_py(filename='NetworkUtilities/version.py'):
         f.write(content)
 
 
+def return_desc():
+    with open("README.md", "r") as fh:
+        long_description = fh.read()
+    return long_description
+
+
 def setup_package():
     from setuptools import setup
     write_version_py()
+    md_desc = return_desc()
 
     setup(
-        name='NetworkUtilities',
+        name='nettools',
         version=get_version_info()[0],
-        description='A quick project allowing to calculate subnetwork ranges easily',
+        description='A tool allowing to create, calculate and manipulate networks and subnetworks easily',
+        long_description=md_desc,
+        long_description_content_type="text/markdown",
+
         url='https://github.com/BioTheWolff/NetworkUtilities',
         project_urls={
             'Source Code': 'https://github.com/BioTheWolff/NetworkUtilities',
@@ -77,6 +87,19 @@ def setup_package():
             'NetworkUtilities',
             'NetworkUtilities.core',
             'NetworkUtilities.utils'
+        ],
+
+        classifiers=[
+            'Development Status :: 5 - Production/Stable',
+
+            'Intended Audience :: Developers',
+            'Intended Audience :: System Administrators',
+
+            'Topic :: Utilities',
+
+            "Programming Language :: Python :: 3",
+            "License :: OSI Approved :: MIT License",
+            "Operating System :: OS Independent",
         ],
 
         python_requires='>=3.6',

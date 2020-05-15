@@ -9,3 +9,8 @@ NetworkUtilities/version.py
 # Coverage module
 .coverage
 htmlcov/
+
+# Publishing
+dist
+build
+nettools.egg-info
