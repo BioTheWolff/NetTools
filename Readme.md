@@ -5,7 +5,7 @@
 
 NetworkUtilities aims to provide an easy and simple way to create, handle and modify virtual IPv4 networks.
 
-Now on pypi !
+Now [here](https://pypi.org/project/nettools/) on pypi !
 ```ignorelang
 python3 -m pip install nettools
 ```
