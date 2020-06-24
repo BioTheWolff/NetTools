@@ -1,5 +1,5 @@
 import unittest
-from NetworkUtilities import *
+from nettools import *
 
 
 def content(x, tweak=None):

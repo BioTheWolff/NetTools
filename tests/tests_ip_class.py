@@ -1,5 +1,5 @@
 import unittest
-from NetworkUtilities import FourBytesLiteral, LimitedList
+from nettools import FourBytesLiteral, LimitedList
 
 
 class FBLTests(unittest.TestCase):

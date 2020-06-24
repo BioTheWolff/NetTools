@@ -1,7 +1,7 @@
-from NetworkUtilities.core.ipv4_network import IPv4Network
-from NetworkUtilities.utils.errors import MaskTooSmallException
-from NetworkUtilities.utils.utils import Utils
-from NetworkUtilities.utils.ip_class import FourBytesLiteral
+from nettools.core.ipv4_network import IPv4Network
+from nettools.utils.errors import MaskTooSmallException
+from nettools.utils.utils import Utils
+from nettools.utils.ip_class import FourBytesLiteral
 from typing import Union, List
 
 

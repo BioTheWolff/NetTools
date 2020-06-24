@@ -1,9 +1,9 @@
-from NetworkUtilities.utils.errors import MaskLengthOffBoundsException, \
+from nettools.utils.errors import MaskLengthOffBoundsException, \
     RFCRulesWrongCoupleException, \
     RFCRulesIPWrongRangeException, MaskNotProvided, IncorrectMaskException, BytesLengthException, \
     ByteNumberOffLimitsException
-from NetworkUtilities.utils.utils import Utils
-from NetworkUtilities.utils.ip_class import FourBytesLiteral
+from nettools.utils.utils import Utils
+from nettools.utils.ip_class import FourBytesLiteral
 from typing import Union, Dict
 
 

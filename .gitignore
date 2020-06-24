@@ -4,7 +4,7 @@ __pycache__/
 stock/
 
 # Version file
-NetworkUtilities/version.py
+nettools/version.py
 
 # Coverage module
 .coverage

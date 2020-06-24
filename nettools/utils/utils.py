@@ -1,5 +1,5 @@
-from NetworkUtilities.utils.errors import IPv4LimitError
-from NetworkUtilities.utils.ip_class import FourBytesLiteral
+from nettools.utils.errors import IPv4LimitError
+from nettools.utils.ip_class import FourBytesLiteral
 from typing import Dict
 
 

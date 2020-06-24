@@ -1,6 +1,6 @@
 import unittest
 import unittest.mock as m
-from NetworkUtilities import *
+from nettools import *
 
 
 def init_cidr(sizes, cidr):

@@ -1,6 +1,6 @@
 import argparse
-from NetworkUtilities.core.ipv4_network import IPv4NetworkDisplayer
-from NetworkUtilities.core.ipv4_network_compound import IPv4NetworkCompound
+from nettools.core.ipv4_network import IPv4NetworkDisplayer
+from nettools.core.ipv4_network_compound import IPv4NetworkCompound
 
 
 def main():
