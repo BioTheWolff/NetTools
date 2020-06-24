@@ -1,7 +1,7 @@
 # NetTools
 
 [![Build Status](https://travis-ci.com/BioTheWolff/NetTools.svg?branch=master)](https://travis-ci.com/BioTheWolff/nettools)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/30e87ae5f5954348b5112171998db645)](https://www.codacy.com/manual/BioTheWolff/NetTools?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=BioTheWolff/NetTools&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/dd1c6f83474a4fa498151572684f3c99)](https://www.codacy.com/manual/BioTheWolff/NetTools?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=BioTheWolff/NetTools&amp;utm_campaign=Badge_Grade)
 
 NetworkUtilities aims to provide an easy and simple way to create, handle and modify virtual IPv4 networks.
 
